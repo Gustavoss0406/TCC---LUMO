@@ -1,0 +1,5 @@
+{
+  "name": "FocusBuddy",
+  "description": "A modern productivity monitoring dashboard connected to Supabase, featuring device pairing, real-time activity tracking, and character-based feedback.",
+  "requestFramePermissions": []
+}

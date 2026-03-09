@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-bright-green: #9CFF8A;
+  --color-forest-green: #0F3D0C;
+  --color-bright-orange: #FFC89E;
+  --color-bright-yellow: #FFF59E;
+  --color-bright-blue: #9EE8FF;
+  --color-bright-pink: #FF9EEB;
+  --color-dark-purple: #2C002A;
+  --color-dark-gold: #4B401F;
+  --color-dark-charcoal: #1A1C1E;
+  --color-dark-maroon: #4B1F1F;
+
+  /* Default (Light) Colors */
+  --color-content-primary: #1A1C1E;
+  --color-content-secondary: #6B6B6B;
+  --color-content-tertiary: #9B9B9B;
+  --color-content-link: #0F3D0C;
+
+  --color-interactive-primary: #0F3D0C;
+  --color-interactive-accent: #9CFF8A;
+  --color-interactive-secondary: #6B6B6B;
+  --color-interactive-control: #0F3D0C;
+
+  --color-background-screen: #F5F5F5;
+  --color-background-elevated: #FFFFFF;
+  --color-background-neutral: #E0E0E0;
+  --color-background-overlay: #E0E0E0;
+
+  --color-border-neutral: #E0E0E0;
+  --color-border-overlay: #E0E0E0;
+
+  --color-sentiment-negative: #C23636;
+  --color-sentiment-positive: #36C236;
+  --color-sentiment-warning: #C2C236;
+
+  --color-base-contrast: #FFFFFF;
+  --color-base-light: #1A1C1E;
+  --color-base-dark: #000000;
+
+  /* Animations */
+  --animate-shimmer: shimmer 3s infinite linear;
+
+  @keyframes shimmer {
+    0% { transform: translateX(-150%) skewX(-12deg); }
+    100% { transform: translateX(150%) skewX(-12deg); }
+  }
+}
+
+/* Dark Mode Overrides */
+@layer base {
+  :root:has(.dark) {
+    --color-content-primary: #FFFFFF;
+    --color-content-secondary: #A0A0A0;
+    --color-content-tertiary: #6B6B6B;
+    --color-content-link: #9CFF8A;
+
+    --color-interactive-primary: #9CFF8A; /* Light green text/icons */
+    --color-interactive-accent: #0F3D0C; /* Dark green backgrounds */
+    --color-interactive-control: #FFFFFF;
+
+    --color-background-screen: #0A0A0A;
+    --color-background-elevated: #1A1A1A;
+    --color-background-neutral: #2C2C2C;
+    --color-background-overlay: #2C2C2C;
+
+    --color-border-neutral: #333333;
+    --color-border-overlay: #333333;
+
+    --color-base-contrast: #000000;
+  }
+
+  body {
+    @apply bg-background-screen text-content-primary font-sans antialiased transition-colors duration-300;
+  }
+}
+
+@layer utilities {
+  .shimmer-effect {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .shimmer-effect::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      transparent 100%
+    );
+    transform: translateX(-150%) skewX(-12deg);
+    animation: shimmer 3s infinite;
+    pointer-events: none;
+  }
+}
