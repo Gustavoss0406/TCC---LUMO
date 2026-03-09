@@ -75,9 +75,9 @@ const Auth = () => {
             className="inline-block"
           >
             <img 
-              src="https://i.ibb.co/LMWbTzd/freepik-eu-quero-uma-logo-que-siga-o-conceito-da-img1-que-1071.png" 
-              alt="Logo" 
-              className="h-32 w-auto mx-auto object-contain"
+              src="https://i.ibb.co/tPwNdBxH/freepik-eu-quero-uma-logo-que-siga-o-conceito-da-img1-que-1069.png" 
+              alt="FocusBuddy" 
+              className="h-28 w-auto mx-auto object-contain rounded-3xl shadow-xl shadow-interactive-accent/20"
             />
           </motion.div>
           

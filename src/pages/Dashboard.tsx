@@ -18,6 +18,8 @@ import {
   Brain
 } from 'lucide-react';
 
+import { Skeleton } from '../components/Skeleton';
+
 const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) => {
   const { user } = useAuth();
   const [state, setState] = useState<DeviceState | null>(null);
@@ -51,7 +53,7 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
     } finally {
-      setLoading(false);
+      if (!showSync) setLoading(false);
       if (showSync) {
         setTimeout(() => setSyncing(false), 1000);
       }
@@ -60,14 +62,23 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(() => fetchData(), 30000);
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchData();
+      }
+    }, 30000);
     return () => clearInterval(interval);
   }, [user]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-interactive-primary border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-6 pb-24 max-w-lg mx-auto">
+        <div className="flex flex-col items-center justify-center pt-8 pb-4">
+          <Skeleton className="w-80 h-80 rounded-[32px] mb-2" />
+          <Skeleton className="w-48 h-8 rounded-full" />
+        </div>
+        <Skeleton className="h-64 rounded-[40px]" />
+        <Skeleton className="h-48 rounded-[40px]" />
       </div>
     );
   }
