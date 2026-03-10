@@ -14,7 +14,7 @@ const Auth = () => {
   
   const { theme } = useTheme();
   const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const LOGO_LIGHT = '/icons/icon-192.png';
+  const LOGO_LIGHT = 'https://i.ibb.co/jkgvKQQg/freepik-eu-quero-uma-logo-que-siga-o-conceito-da-img1-que-1071.png';
   const LOGO_DARK = 'https://i.ibb.co/jknDxrn5/Logo-darkmode.png';
 
   const handleGoogleLogin = async () => {
