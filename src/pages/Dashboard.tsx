@@ -66,17 +66,17 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
       // Fetch user devices
       const { data: userDevices } = await supabase
         .from('devices')
-        .select('id')
+        .select('device_code')
         .eq('user_id', user.id);
 
       if (userDevices && userDevices.length > 0) {
-        const deviceIds = userDevices.map(d => d.id);
+        const deviceCodes = userDevices.map(d => d.device_code);
         
         // Fetch the most recently active device state
         const { data: deviceState } = await supabase
           .from('device_state')
           .select('*')
-          .in('device_id', deviceIds)
+          .in('device_code', deviceCodes)
           .order('last_sync', { ascending: false })
           .limit(1)
           .single();

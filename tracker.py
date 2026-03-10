@@ -180,28 +180,23 @@ def save_state():
 # =========================================================
 
 def get_active_window_app():
-
+    script = '''
+    tell application "System Events"
+        set frontApp to name of first application process whose frontmost is true
+        return frontApp
+    end tell
+    '''
     try:
-
-        from Quartz import CGWindowListCopyWindowInfo
-        from Quartz import kCGWindowListOptionOnScreenOnly
-        from Quartz import kCGNullWindowID
-
-        windows = CGWindowListCopyWindowInfo(
-            kCGWindowListOptionOnScreenOnly,
-            kCGNullWindowID
+        result = subprocess.check_output(
+            ["osascript", "-e", script],
+            stderr=subprocess.DEVNULL
         )
-
-        for window in windows:
-
-            if window.get("kCGWindowLayer", 0) == 0:
-
-                return window.get("kCGWindowOwnerName")
-
+        app_name = result.decode().strip()
+        print(f"PYTHON: Active app: {app_name}", flush=True)
+        return app_name
     except:
-        pass
-
-    return None
+        print("PYTHON: Error getting active app", flush=True)
+        return None
 
 
 def get_chrome_url():
@@ -289,10 +284,12 @@ def main():
     while True:
 
         try:
+            print("PYTHON: Loop start", flush=True)
 
             app_name = get_active_window_app()
 
             if not app_name:
+                print("PYTHON: No app detected", flush=True)
                 time.sleep(LOOP_INTERVAL)
                 continue
 
@@ -338,7 +335,7 @@ def main():
 
                 payload = {
 
-                    "device_id": device_id,
+                    "device_code": DEVICE_CODE,
                     "state": "active",
                     "productivity": score,
                     "current_activity": key,
@@ -351,7 +348,7 @@ def main():
                 }
 
                 supabase.table("device_state") \
-                    .upsert(payload, on_conflict="device_id") \
+                    .upsert(payload, on_conflict="device_code") \
                     .execute()
 
                 last_send_time = now
@@ -378,7 +375,7 @@ def main():
                 }
 
                 supabase.table("productivity_logs") \
-                    .insert(log_data) \
+                    .upsert(log_data, on_conflict="(device_id, date)") \
                     .execute()
 
                 last_log_time = now
