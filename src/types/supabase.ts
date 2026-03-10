@@ -21,7 +21,9 @@ export type DeviceState = {
 export type ProductivityLog = {
   id: string;
   device_id: string;
+  device_code: string;
   date: string;
+  hour?: number; // 0-23, present for hourly logs
   // newer schema uses productivity_score; older records might still have productivity
   productivity?: number;
   productivity_score?: number;

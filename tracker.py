@@ -65,6 +65,7 @@ app_usage_seconds = {}
 
 last_send_time = time.time()
 last_log_time = time.time()
+last_hour = None  # Track the current hour
 
 device_id = None
 
@@ -349,9 +350,11 @@ def main():
     global time_distracting
     global last_send_time
     global last_log_time
+    global last_hour
     global device_id
 
     device_id = wait_for_device_registration()
+    last_hour = datetime.now(timezone.utc).hour  # Initialize current hour
 
     print("\n🚀 RASTREADOR INICIADO!")
     print("Pressione Ctrl+C para parar.")
@@ -442,34 +445,37 @@ def main():
 
             if now - last_log_time >= LOG_INTERVAL:
 
+                current_hour = datetime.now(timezone.utc).hour
                 today = str(date.today())
-
-                log_data = {
-                    "device_code": DEVICE_CODE,
-                    "date": today,
-                    "productivity_score": score,
-                    "productive_time": time_productive,
-                    "neutral_time": time_neutral,
-                    "distracting_time": time_distracting,
-                    "app_usage": app_usage_seconds
-                }
-
-                try:
-                    supabase.table("productivity_logs").insert(log_data).execute()
-                    print(f" [Logs salvos]")
-                except Exception as e:
-                    print(f"Erro no insert productivity_logs: {e}")
+                
+                # Check if hour changed; if so, log the previous hour and reset
+                if last_hour is not None and current_hour != last_hour:
+                    # Log ended for the previous hour
+                    log_data = {
+                        "device_code": DEVICE_CODE,
+                        "date": today,
+                        "hour": last_hour,
+                        "productivity_score": score,
+                        "productive_time": time_productive,
+                        "neutral_time": time_neutral,
+                        "distracting_time": time_distracting,
+                        "app_usage": app_usage_seconds
+                    }
+                    
                     try:
-                        result = supabase.table("productivity_logs") \
-                            .update(log_data) \
-                            .eq("device_code", DEVICE_CODE) \
-                            .eq("date", today) \
-                            .execute()
-                        print(f'Update logs result: {result}')
-                        print(f" [Logs atualizados]")
-                    except Exception as e2:
-                        print(f"Erro no update productivity_logs: {e2}")
-
+                        supabase.table("productivity_logs").insert(log_data).execute()
+                        print(f" [Logs salvos para hora {last_hour}]")
+                    except Exception as e:
+                        print(f"Erro no insert productivity_logs: {e}")
+                    
+                    # Reset for new hour
+                    time_productive = 0
+                    time_neutral = 0
+                    time_distracting = 0
+                    app_usage_seconds = {}
+                    score = 0
+                
+                last_hour = current_hour
                 last_log_time = now
 
         except KeyboardInterrupt:

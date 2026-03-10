@@ -49,15 +49,25 @@ const History = () => {
 
       if (devices && devices.length > 0) {
         const deviceCode = devices[0].device_code;
-        const deviceId = devices[0].id;
         console.log('History deviceCode:', deviceCode);
+        
+        // Determine date range based on view
+        const today = new Date();
+        let daysBack = 7; // default: weekly (7 days)
+        if (view === 'daily') daysBack = 1;
+        else if (view === 'monthly') daysBack = 30;
+        
+        const startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - daysBack);
+        const startDateStr = startDate.toISOString().split('T')[0];
         
         const { data: history, error: historyError } = await supabase
           .from('productivity_logs')
           .select('*')
           .eq('device_code', deviceCode)
+          .gte('date', startDateStr)
           .order('date', { ascending: true })
-          .limit(30);
+          .order('hour', { ascending: true });
 
         if (historyError) {
           console.error('Error fetching history:', historyError);
@@ -80,8 +90,9 @@ const History = () => {
   };
 
   useEffect(() => {
+    setLoading(true);
     fetchData();
-  }, [user]);
+  }, [user, view]);
 
   if (loading) {
     return (
@@ -91,23 +102,106 @@ const History = () => {
     );
   }
 
-  const chartData = logs.map(log => ({
-    date: new Date(log.date).toLocaleDateString('pt-BR', { weekday: 'short' }),
-    score: log.productivity_score ?? log.productivity ?? 0,
-    productive: Math.round((log.productive_time || 0) / 3600 * 10) / 10,
+  // Group and aggregate data based on view
+  const groupedData = (() => {
+    if (view === 'daily') {
+      // Group by hour (0-23)
+      const hourly: Record<number, ProductivityLog[]> = {};
+      logs.forEach(log => {
+        const hour = log.hour ?? 0;
+        if (!hourly[hour]) hourly[hour] = [];
+        hourly[hour].push(log);
+      });
+      
+      return Array.from({ length: 24 }, (_, i) => {
+        const logsForHour = hourly[i] || [];
+        const avg = logsForHour.length > 0
+          ? Math.round(logsForHour.reduce((sum, log) => sum + (log.productivity_score ?? log.productivity ?? 0), 0) / logsForHour.length)
+          : 0;
+        const avgProductive = logsForHour.length > 0
+          ? Math.round(logsForHour.reduce((sum, log) => sum + (log.productive_time || 0), 0) / logsForHour.length / 60)
+          : 0;
+        
+        return {
+          label: `${String(i).padStart(2, '0')}:00`,
+          score: avg,
+          productive: avgProductive,
+          raw: logsForHour
+        };
+      }).filter(d => d.raw.length > 0); // Only show hours with data
+    } else if (view === 'weekly') {
+      // Group by day of week
+      const daily: Record<string, ProductivityLog[]> = {};
+      logs.forEach(log => {
+        const dateStr = log.date;
+        if (!daily[dateStr]) daily[dateStr] = [];
+        daily[dateStr].push(log);
+      });
+      
+      return Object.entries(daily).map(([dateStr, logsForDay]) => {
+        const date = new Date(dateStr);
+        const dayName = date.toLocaleDateString('pt-BR', { weekday: 'short' });
+        const avg = logsForDay.length > 0
+          ? Math.round(logsForDay.reduce((sum, log) => sum + (log.productivity_score ?? log.productivity ?? 0), 0) / logsForDay.length)
+          : 0;
+        const avgProductive = logsForDay.length > 0
+          ? Math.round(logsForDay.reduce((sum, log) => sum + (log.productive_time || 0), 0) / logsForDay.length / 3600 * 10) / 10
+          : 0;
+        
+        return {
+          label: dayName,
+          score: avg,
+          productive: avgProductive,
+          raw: logsForDay
+        };
+      });
+    } else {
+      // Monthly: group by day
+      const daily: Record<string, ProductivityLog[]> = {};
+      logs.forEach(log => {
+        const dateStr = log.date;
+        if (!daily[dateStr]) daily[dateStr] = [];
+        daily[dateStr].push(log);
+      });
+      
+      return Object.entries(daily).map(([dateStr, logsForDay]) => {
+        const date = new Date(dateStr);
+        const dayOfMonth = date.getDate();
+        const avg = logsForDay.length > 0
+          ? Math.round(logsForDay.reduce((sum, log) => sum + (log.productivity_score ?? log.productivity ?? 0), 0) / logsForDay.length)
+          : 0;
+        const avgProductive = logsForDay.length > 0
+          ? Math.round(logsForDay.reduce((sum, log) => sum + (log.productive_time || 0), 0) / logsForDay.length / 3600 * 10) / 10
+          : 0;
+        
+        return {
+          label: `dia ${dayOfMonth}`,
+          score: avg,
+          productive: avgProductive,
+          raw: logsForDay
+        };
+      });
+    }
+  })();
+
+  const chartData = groupedData.map(g => ({
+    date: g.label,
+    score: g.score,
+    productive: g.productive
   }));
 
-  const avgScore = logs.length > 0 
-    ? Math.round(logs.reduce((acc, curr) => acc + (curr.productivity_score ?? curr.productivity ?? 0), 0) / logs.length)
+  const avgScore = groupedData.length > 0 
+    ? Math.round(groupedData.reduce((sum, g) => sum + g.score, 0) / groupedData.length)
     : 0;
 
-  const validLogs = logs.filter(log => (log.productivity_score ?? log.productivity) != null);
-  const bestDay = validLogs.length > 0
-    ? validLogs.sort((a, b) => ( (b.productivity_score ?? b.productivity ?? 0) - (a.productivity_score ?? a.productivity ?? 0) ))[0]
+  const validGrouped = groupedData.filter(g => g.score > 0);
+  const bestDay = validGrouped.length > 0
+    ? validGrouped.reduce((max, g) => (g.score > max.score ? g : max))
     : null;
 
-  const totalFocusTime = logs.reduce((acc, curr) => acc + (curr.productive_time || 0), 0);
-  const avgFocusTime = logs.length > 0 ? totalFocusTime / logs.length : 0;
+  const avgFocusTime = groupedData.length > 0
+    ? groupedData.reduce((sum, g) => sum + (g.productive * (view === 'daily' ? 60 : 3600)), 0) / groupedData.length
+    : 0;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -189,10 +283,10 @@ const History = () => {
                 <span className="text-xs font-black uppercase tracking-widest">Melhor Desempenho</span>
               </div>
               <h3 className="text-5xl font-black tracking-tighter mb-1">
-                {bestDay ? new Date(bestDay.date).toLocaleDateString('pt-BR', { weekday: 'long' }) : 'N/A'}
+                {bestDay ? bestDay.label : 'N/A'}
               </h3>
               <p className="text-lg font-medium opacity-90">
-                {bestDay ? `Maior pontuação de ${bestDay.productivity_score ?? bestDay.productivity ?? 0}%` : 'Sem dados ainda'}
+                {bestDay ? `Maior pontuação de ${bestDay.score}%` : 'Sem dados ainda'}
               </p>
             </div>
             <div className="w-16 h-16 rounded-[24px] bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 shadow-lg">
@@ -262,7 +356,11 @@ const History = () => {
         <div className="flex items-center justify-between relative">
           <div>
             <h3 className="font-black text-content-primary text-2xl tracking-tight">Tendência de Produtividade</h3>
-            <p className="text-sm text-content-secondary font-medium mt-1">Histórico de pontuação dos últimos 7 dias</p>
+            <p className="text-sm text-content-secondary font-medium mt-1">
+              {view === 'daily' && 'Histórico de pontuação por hora (24h)'}
+              {view === 'weekly' && 'Histórico de pontuação dos últimos 7 dias'}
+              {view === 'monthly' && 'Histórico de pontuação dos últimos 30 dias'}
+            </p>
           </div>
           <div className="flex items-center gap-2 bg-interactive-accent/20 px-4 py-1.5 rounded-full">
             <div className="w-2.5 h-2.5 rounded-full bg-interactive-primary" />
