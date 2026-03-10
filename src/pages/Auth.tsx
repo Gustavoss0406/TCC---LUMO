@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 
@@ -11,6 +11,7 @@ const Auth = () => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showVideo, setShowVideo] = useState(false);
   
   const { theme } = useTheme();
   const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -18,6 +19,7 @@ const Auth = () => {
   const LOGO_DARK = 'https://i.ibb.co/jknDxrn5/Logo-darkmode.png';
 
   const handleGoogleLogin = async () => {
+    // Google login doesn't support the video transition easily as it redirects
     setLoading(true);
     setError(null);
     try {
@@ -36,30 +38,51 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
+    if (!email || !password) {
+      setError('Por favor, preencha todos os campos.');
+      return;
+    }
+
+    if (!isLogin && !name) {
+      setError('Por favor, informe seu nome.');
+      return;
+    }
+
+    // Start Video Transition
+    setShowVideo(true);
+    setLoading(true);
+
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: name,
-            },
-          },
-        });
-        if (error) throw error;
-        alert('Verifique seu e-mail para o link de confirmação!');
+      // Ensure video plays for at least 4 seconds for effect
+      const minDelay = new Promise(resolve => setTimeout(resolve, 4000));
+      
+      const loginPromise = isLogin 
+        ? supabase.auth.signInWithPassword({ email, password })
+        : supabase.auth.signUp({ 
+            email, 
+            password, 
+            options: { data: { full_name: name } } 
+          });
+
+      const [_, { error }] = await Promise.all([minDelay, loginPromise]);
+
+      if (error) throw error;
+
+      if (!isLogin) {
+        // If registration, we might need to show a message if email confirm is on
+        // But for now we assume auto-login or redirect
+        alert('Cadastro realizado! Verifique seu e-mail se necessário.');
+        setShowVideo(false); // Hide video to show alert/login screen again
       }
+      
+      // If login success, the AuthContext will update 'user' and unmount this component
+      // effectively transitioning to Dashboard automatically.
+
     } catch (err: any) {
+      // Error: Hide video and show error
+      setShowVideo(false);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -68,6 +91,45 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-interactive-accent flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Video Overlay */}
+      <AnimatePresence>
+        {showVideo && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+          >
+            <video 
+              src="https://i.imgur.com/ufMvZhO.mp4" 
+              autoPlay 
+              muted 
+              loop 
+              playsInline
+              className="w-full h-full object-cover opacity-80"
+            />
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-10">
+              <motion.h2 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-3xl font-black tracking-tighter mb-2"
+              >
+                Iniciando FocusBuddy...
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+                className="text-white/60 font-medium"
+              >
+                Preparando seu ambiente de foco
+              </motion.p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Elementos Decorativos de Fundo */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-32 -right-32 w-96 h-96 bg-white/20 rounded-full blur-3xl animate-pulse" />
