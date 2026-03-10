@@ -52,7 +52,13 @@
 
 /* Dark Mode Overrides */
 @layer base {
-  :root:has(.dark) {
+  :root {
+    overflow-x: hidden; /* Prevent horizontal scroll */
+  }
+
+  /* Support both :root:has(.dark) and .dark on root */
+  :root:has(.dark),
+  :root.dark {
     --color-content-primary: #FFFFFF;
     --color-content-secondary: #A0A0A0;
     --color-content-tertiary: #6B6B6B;
@@ -75,6 +81,9 @@
 
   body {
     @apply bg-background-screen text-content-primary font-sans antialiased transition-colors duration-300;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    width: 100%;
+    position: relative;
   }
 }
 
