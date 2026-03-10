@@ -15,6 +15,9 @@ export default defineConfig(({ mode }) => {
         injectRegister: 'auto',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         workbox: {
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          skipWaiting: true,
           maximumFileSizeToCacheInBytes: 4000000,
           globPatterns: ['**/*.{js,css,html,ico,png,svg}']
         },
