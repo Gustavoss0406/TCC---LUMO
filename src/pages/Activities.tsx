@@ -9,11 +9,8 @@ import { Monitor, Search, Filter, ArrowUpRight, ArrowDownRight, Clock, Layout, R
 
 const Activities = () => {
   const { user } = useAuth();
-  const [log, setLog] = useState<ProductivityLog | null>(null);
-  const [appIcons, setAppIcons] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
-  const [fetching, setFetching] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [streak, setStreak] = useState(0);
+  const [dailyGoal, setDailyGoal] = useState(14400);
 
   const fetchData = async (showSync = false) => {
     if (!user) return;
@@ -25,6 +22,34 @@ const Activities = () => {
       if (icons) {
         const iconMap = icons.reduce((acc, curr) => ({ ...acc, [curr.name]: curr.icon_url }), {});
         setAppIcons(iconMap);
+      }
+
+      // Fetch profile for daily goal
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('daily_goal_seconds')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile?.daily_goal_seconds) {
+        setDailyGoal(profile.daily_goal_seconds);
+      }
+
+      // Fetch streak
+      const { data: goals } = await supabase
+        .from('daily_goals')
+        .select('date, completed')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (goals) {
+        let currentStreak = 0;
+        for (const goal of goals) {
+          if (goal.completed) currentStreak++;
+          else if (goal.date === new Date().toISOString().split('T')[0]) continue;
+          else break;
+        }
+        setStreak(currentStreak);
       }
 
       const { data: devices } = await supabase
@@ -87,6 +112,13 @@ const Activities = () => {
 
   const totalSeconds = Object.values(appUsage).reduce((a, b) => (a as number) + (b as number), 0);
 
+  const topApp = Object.entries(appUsage).sort((a, b) => b[1] - a[1])[0];
+  const topFocus = topApp ? topApp[0] : "N/A";
+  const topFocusTime = topApp ? formatTime(topApp[1]) : "0h 0m";
+  const dailyProgress = dailyGoal > 0 ? Math.round((log?.productive_time || 0) / dailyGoal * 100) : 0;
+  const dailyGoalStr = `${dailyProgress}%`;
+  const productivity = "+12%"; // TODO: calculate from logs
+
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -109,7 +141,13 @@ const Activities = () => {
       animate="show"
       className="space-y-8 pb-12 max-w-lg mx-auto"
     >
-      <ActivityHero />
+      <ActivityHero 
+        topFocus={topFocus} 
+        topFocusTime={topFocusTime} 
+        dailyGoal={dailyGoalStr} 
+        streak={streak} 
+        productivity={productivity} 
+      />
       <motion.div variants={itemVariants} className="space-y-6">
         <div className="flex items-center justify-between px-1">
           <div>

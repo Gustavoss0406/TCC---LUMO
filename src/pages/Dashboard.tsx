@@ -20,7 +20,6 @@ import {
 
 import { Skeleton } from '../components/Skeleton';
 import { useTheme } from '../hooks/useTheme';
-import ActivityHero from '../components/ActivityHero';
 
 const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) => {
   const { user } = useAuth();
@@ -210,14 +209,6 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
     show: { opacity: 1, y: 0, transition: { type: "spring", bounce: 0.4 } }
   };
 
-  const appUsage = state.app_usage || {};
-  const topApp = Object.entries(appUsage).sort((a, b) => b[1] - a[1])[0];
-  const topFocus = topApp ? topApp[0] : "N/A";
-  const topFocusTime = topApp ? formatTime(topApp[1]) : "0h 0m";
-  const dailyProgress = dailyGoal > 0 ? Math.round((state.productive_time / dailyGoal) * 100) : 0;
-  const dailyGoalStr = `${dailyProgress}%`;
-  const productivity = "+12%"; // TODO: calculate from logs
-
   return (
     <motion.div 
       variants={containerVariants}
@@ -225,14 +216,6 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
       animate="show"
       className="space-y-6 pb-24 max-w-lg mx-auto"
     >
-      <ActivityHero 
-        topFocus={topFocus} 
-        topFocusTime={topFocusTime} 
-        dailyGoal={dailyGoalStr} 
-        streak={streak} 
-        productivity={productivity} 
-      />
-
       {/* Top Section: Large Mascot */}
       <motion.div variants={itemVariants} className="flex flex-col items-center justify-center pt-8 pb-4 relative">
         <div className="relative w-80 h-80 flex items-center justify-center mb-2">
