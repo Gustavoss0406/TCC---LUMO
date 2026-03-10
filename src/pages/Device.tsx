@@ -70,16 +70,29 @@ const DevicePage = () => {
           {
             user_id: user.id,
             device_code: deviceCode,
-            name: deviceName || 'My FocusBuddy',
-            status: 'active',
-            last_sync: new Date().toISOString()
+            name: deviceName || 'My FocusBuddy'
           }
         ])
         .select();
 
       if (error) throw error;
 
-      setDevices([...devices, data[0]]);
+      const newDevice = data[0];
+
+      // Initialize device state
+      await supabase.from('device_state').insert({
+        device_id: newDevice.id,
+        state: 'active',
+        productivity: 0,
+        current_activity: 'Offline',
+        app_usage: {},
+        last_sync: new Date().toISOString(),
+        productive_time: 0,
+        neutral_time: 0,
+        distracting_time: 0
+      });
+
+      setDevices([...devices, newDevice]);
       setShowPairForm(false);
       setDeviceCode('');
       setDeviceName('');
