@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Zap, Trophy, Target, TrendingUp } from 'lucide-react';
+import { useTheme } from '../hooks/useTheme';
 
 interface ActivityHeroProps {
   topFocus?: string;
@@ -17,6 +18,7 @@ const ActivityHero: React.FC<ActivityHeroProps> = ({
   streak = 0,
   productivity = "0%"
 }) => {
+  const { theme } = useTheme();
   const cards = [
     {
       id: 1,
