@@ -20,7 +20,7 @@ import {
 
 import { Skeleton } from '../components/Skeleton';
 import { useTheme } from '../hooks/useTheme';
-import { ActivityHero } from '../components/ActivityHero';
+import ActivityHero from '../components/ActivityHero';
 
 const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) => {
   const { user } = useAuth();
