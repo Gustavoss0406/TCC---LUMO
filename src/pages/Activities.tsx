@@ -29,18 +29,19 @@ const Activities = () => {
 
       const { data: devices } = await supabase
         .from('devices')
-        .select('id')
+        .select('id, device_code')
         .eq('user_id', user.id)
         .limit(1);
 
       if (devices && devices.length > 0) {
         const deviceId = devices[0].id;
+        const deviceCode = devices[0].device_code;
         const today = new Date().toISOString().split('T')[0];
         
         const { data: logs } = await supabase
           .from('productivity_logs')
           .select('*')
-          .eq('device_id', deviceId)
+          .eq('device_code', deviceCode)
           .eq('date', today)
           .limit(1);
 

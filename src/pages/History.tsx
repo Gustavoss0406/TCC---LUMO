@@ -43,17 +43,18 @@ const History = () => {
     try {
       const { data: devices } = await supabase
         .from('devices')
-        .select('id')
+        .select('id, device_code')
         .eq('user_id', user.id)
         .limit(1);
 
       if (devices && devices.length > 0) {
+        const deviceCode = devices[0].device_code;
         const deviceId = devices[0].id;
         
         const { data: history } = await supabase
           .from('productivity_logs')
           .select('*')
-          .eq('device_id', deviceId)
+          .eq('device_code', deviceCode)
           .order('date', { ascending: true })
           .limit(30);
 

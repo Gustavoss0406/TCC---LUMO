@@ -2,50 +2,63 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Zap, Trophy, Target, TrendingUp } from 'lucide-react';
 
-const cards = [
-  {
-    id: 1,
-    title: "Top Focus",
-    subtitle: "VS Code",
-    value: "4h 20m",
-    color: "bg-interactive-accent",
-    textColor: "text-interactive-primary",
-    icon: Zap,
-    rotate: 2
-  },
-  {
-    id: 2,
-    title: "Daily Goal",
-    subtitle: "Almost there!",
-    value: "85%",
-    color: "bg-bright-blue",
-    textColor: "text-content-primary",
-    icon: Target,
-    rotate: -2
-  },
-  {
-    id: 3,
-    title: "Focus Streak",
-    subtitle: "Keep it up",
-    value: "8 Days",
-    color: "bg-bright-pink",
-    textColor: "text-white",
-    icon: Trophy,
-    rotate: 1
-  },
-  {
-    id: 4,
-    title: "Productivity",
-    subtitle: "Weekly avg",
-    value: "+12%",
-    color: "bg-bright-yellow",
-    textColor: "text-content-primary",
-    icon: TrendingUp,
-    rotate: -1
-  }
-];
+interface ActivityHeroProps {
+  topFocus?: string;
+  topFocusTime?: string;
+  dailyGoal?: string;
+  streak?: number;
+  productivity?: string;
+}
 
-const ActivityHero = () => {
+const ActivityHero: React.FC<ActivityHeroProps> = ({
+  topFocus = "N/A",
+  topFocusTime = "0h 0m",
+  dailyGoal = "0%",
+  streak = 0,
+  productivity = "0%"
+}) => {
+  const cards = [
+    {
+      id: 1,
+      title: "Top Focus",
+      subtitle: topFocus,
+      value: topFocusTime,
+      color: "bg-interactive-accent",
+      textColor: "text-interactive-primary",
+      icon: Zap,
+      rotate: 2
+    },
+    {
+      id: 2,
+      title: "Daily Goal",
+      subtitle: streak > 0 ? "Keep it up!" : "Start today!",
+      value: dailyGoal,
+      color: "bg-bright-blue",
+      textColor: "text-content-primary",
+      icon: Target,
+      rotate: -2
+    },
+    {
+      id: 3,
+      title: "Focus Streak",
+      subtitle: "Keep it up",
+      value: `${streak} Days`,
+      color: "bg-bright-pink",
+      textColor: "text-white",
+      icon: Trophy,
+      rotate: 1
+    },
+    {
+      id: 4,
+      title: "Productivity",
+      subtitle: "Weekly avg",
+      value: productivity,
+      color: "bg-bright-yellow",
+      textColor: "text-content-primary",
+      icon: TrendingUp,
+      rotate: -1
+    }
+  ];
   return (
     <div className="w-full overflow-hidden py-4 -mx-6 px-6">
       <div 

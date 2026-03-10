@@ -421,9 +421,21 @@ def main():
                     "last_sync": datetime.now(timezone.utc).isoformat()
                 }
 
-                supabase.table("device_state") \
-                    .upsert(payload, on_conflict="device_id") \
-                    .execute()
+                try:
+                    supabase.table("device_state").insert(payload).execute()
+                    print(f" [Device state enviado: {score}%]")
+                except Exception as e:
+                    print(f"Erro no insert device_state: {e}")
+                    # If insert fails (duplicate), update
+                    try:
+                        result = supabase.table("device_state") \
+                            .update(payload) \
+                            .eq("device_id", device_id) \
+                            .execute()
+                        print(f'Update result: {result}')
+                        print(f" [Device state atualizado: {score}%]")
+                    except Exception as e2:
+                        print(f"Erro no update device_state: {e2}")
 
                 last_send_time = now
 
@@ -441,9 +453,15 @@ def main():
                     "app_usage": app_usage_seconds
                 }
 
-                supabase.table("productivity_logs") \
-                    .upsert(log_data, on_conflict="device_code,date") \
-                    .execute()
+                try:
+                    supabase.table("productivity_logs").insert(log_data).execute()
+                except Exception:
+                    # If insert fails (duplicate), update
+                    supabase.table("productivity_logs") \
+                        .update(log_data) \
+                        .eq("device_code", DEVICE_CODE) \
+                        .eq("date", today) \
+                        .execute()
 
                 print(" [Salvo]")
 
