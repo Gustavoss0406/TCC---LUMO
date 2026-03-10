@@ -63,12 +63,16 @@ const Activities = () => {
         const deviceCode = devices[0].device_code;
         const today = new Date().toISOString().split('T')[0];
         
-        const { data: logs } = await supabase
+        const { data: logs, error: logsError } = await supabase
           .from('productivity_logs')
           .select('*')
           .eq('device_code', deviceCode)
           .eq('date', today)
           .limit(1);
+
+        if (logsError) {
+          console.error('Error fetching logs:', logsError);
+        }
 
         if (logs && logs.length > 0) {
           setLog(logs[0]);

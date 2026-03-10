@@ -203,8 +203,9 @@ def extract_and_upload_icon(app_name):
             icon_cache.add(app_name)
             return
 
-    except:
-        pass
+    except Exception as e:
+        print(f"Erro ao verificar ícone: {e}")
+        return
 
     app_path = get_app_path(app_name)
 
@@ -246,8 +247,8 @@ def extract_and_upload_icon(app_name):
 
         os.remove(temp_path)
 
-    except:
-        pass
+    except Exception as e:
+        print(f"Erro ao extrair ícone: {e}")
 
 
 def classify_activity(app, url=None, title=None):

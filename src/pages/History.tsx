@@ -52,12 +52,16 @@ const History = () => {
         const deviceId = devices[0].id;
         console.log('History deviceCode:', deviceCode);
         
-        const { data: history } = await supabase
+        const { data: history, error: historyError } = await supabase
           .from('productivity_logs')
           .select('*')
           .eq('device_code', deviceCode)
           .order('date', { ascending: true })
           .limit(30);
+
+        if (historyError) {
+          console.error('Error fetching history:', historyError);
+        }
 
         console.log('History logs:', history);
 
@@ -94,14 +98,15 @@ const History = () => {
   }));
 
   const avgScore = logs.length > 0 
-    ? Math.round(logs.reduce((acc, curr) => acc + curr.productivity, 0) / logs.length)
+    ? Math.round(logs.reduce((acc, curr) => acc + (curr.productivity || 0), 0) / logs.length)
     : 0;
 
-  const bestDay = logs.length > 0
-    ? [...logs].sort((a, b) => b.productivity - a.productivity)[0]
+  const validLogs = logs.filter(log => log.productivity != null);
+  const bestDay = validLogs.length > 0
+    ? validLogs.sort((a, b) => (b.productivity || 0) - (a.productivity || 0))[0]
     : null;
 
-  const totalFocusTime = logs.reduce((acc, curr) => acc + curr.productive_time, 0);
+  const totalFocusTime = logs.reduce((acc, curr) => acc + (curr.productive_time || 0), 0);
   const avgFocusTime = logs.length > 0 ? totalFocusTime / logs.length : 0;
 
   const containerVariants = {

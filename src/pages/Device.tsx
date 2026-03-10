@@ -69,7 +69,7 @@ const DevicePage = () => {
 
       if (checkError) throw checkError;
 
-      let newDevice = null;
+      let newDevice: any = null;
 
       if (existingDevices && existingDevices.length > 0) {
         const existingDevice = existingDevices[0];

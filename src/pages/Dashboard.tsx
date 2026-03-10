@@ -77,13 +77,17 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
         const deviceCodes = userDevices.map(d => d.device_code);
         
         // Fetch the most recently active device state
-        const { data: deviceState } = await supabase
+        const { data: deviceState, error: stateError } = await supabase
           .from('device_state')
           .select('*')
           .in('device_id', deviceIds)
           .order('last_sync', { ascending: false })
           .limit(1)
           .single();
+
+        if (stateError && stateError.code !== 'PGRST116') { // PGRST116 is "not found"
+          console.error('Error fetching device state:', stateError);
+        }
 
         console.log('Dashboard Sync:', { 
           deviceIds, 
