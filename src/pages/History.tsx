@@ -194,23 +194,23 @@ const History = () => {
 
         <motion.div 
           variants={itemVariants}
-          className="bg-bright-yellow p-6 rounded-[40px] shadow-xl shadow-bright-yellow/20 border-4 border-white relative overflow-hidden group hover:scale-[1.02] transition-transform"
+          className="bg-bright-yellow dark:bg-gradient-to-br dark:from-yellow-900/40 dark:to-orange-900/40 dark:border-yellow-500/20 p-6 rounded-[40px] shadow-xl shadow-bright-yellow/20 dark:shadow-yellow-900/20 border-4 border-white dark:border-white/5 relative overflow-hidden group hover:scale-[1.02] transition-transform"
         >
           <div className="absolute -right-4 -bottom-4 opacity-20 group-hover:scale-110 transition-transform duration-500">
-            <TrendingUp size={120} className="text-content-primary" />
+            <TrendingUp size={120} className="text-content-primary dark:text-white/20" />
           </div>
           
           <div className="flex flex-col h-full justify-between relative z-10">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center text-content-primary">
+              <div className="w-10 h-10 rounded-full bg-white/30 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center text-content-primary dark:text-white">
                 <BarChart3 size={20} />
               </div>
-              <span className="text-xs font-black text-content-primary uppercase tracking-widest">Média de Pontuação</span>
+              <span className="text-xs font-black text-content-primary dark:text-white uppercase tracking-widest">Média de Pontuação</span>
             </div>
             
             <div>
-              <h3 className="text-5xl font-black text-content-primary tracking-tighter leading-none">{avgScore}</h3>
-              <p className="text-content-primary font-bold text-sm mt-1 flex items-center gap-1 opacity-80">
+              <h3 className="text-5xl font-black text-content-primary dark:text-white tracking-tighter leading-none">{avgScore}</h3>
+              <p className="text-content-primary dark:text-white/80 font-bold text-sm mt-1 flex items-center gap-1 opacity-80">
                 <TrendingUp size={14} /> +5.2%
               </p>
             </div>
@@ -219,25 +219,25 @@ const History = () => {
 
         <motion.div 
           variants={itemVariants}
-          className="bg-bright-blue p-6 rounded-[40px] shadow-xl shadow-bright-blue/20 border-4 border-white relative overflow-hidden group hover:scale-[1.02] transition-transform"
+          className="bg-bright-blue dark:bg-gradient-to-br dark:from-cyan-900/40 dark:to-blue-900/40 dark:border-cyan-500/20 p-6 rounded-[40px] shadow-xl shadow-bright-blue/20 dark:shadow-cyan-900/20 border-4 border-white dark:border-white/5 relative overflow-hidden group hover:scale-[1.02] transition-transform"
         >
           <div className="absolute -right-4 -bottom-4 opacity-20 group-hover:scale-110 transition-transform duration-500">
-            <Clock size={120} className="text-content-primary" />
+            <Clock size={120} className="text-content-primary dark:text-white/20" />
           </div>
           
           <div className="flex flex-col h-full justify-between relative z-10">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center text-content-primary">
+              <div className="w-10 h-10 rounded-full bg-white/30 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center text-content-primary dark:text-white">
                 <Clock size={20} />
               </div>
-              <span className="text-xs font-black text-content-primary uppercase tracking-widest">Média de Foco</span>
+              <span className="text-xs font-black text-content-primary dark:text-white uppercase tracking-widest">Média de Foco</span>
             </div>
             
             <div>
-              <h3 className="text-5xl font-black text-content-primary tracking-tighter leading-none">
+              <h3 className="text-5xl font-black text-content-primary dark:text-white tracking-tighter leading-none">
                 {Math.round(avgFocusTime / 3600 * 10) / 10}<span className="text-2xl ml-1">h</span>
               </h3>
-              <p className="text-content-primary font-bold text-sm mt-1 opacity-80">Média diária</p>
+              <p className="text-content-primary dark:text-white/80 font-bold text-sm mt-1 opacity-80">Média diária</p>
             </div>
           </div>
         </motion.div>

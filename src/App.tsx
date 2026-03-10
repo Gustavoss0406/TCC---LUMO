@@ -16,6 +16,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { isSupabaseConfigured } from './lib/supabase';
 import { AlertCircle, ExternalLink } from 'lucide-react';
 import { useNotifications } from './hooks/useNotifications';
+import { useTheme } from './hooks/useTheme';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -72,9 +73,14 @@ const ConfigError = () => (
 
 const AppContent = () => {
   const { user, loading } = useAuth();
+  const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showNotifications, setShowNotifications] = useState(false);
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+
+  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const LOGO_LIGHT = 'https://i.ibb.co/jkgvKQQg/freepik-eu-quero-uma-logo-que-siga-o-conceito-da-img1-que-1071.png';
+  const LOGO_DARK = 'https://i.ibb.co/jknDxrn5/Logo-darkmode.png';
 
   if (!isSupabaseConfigured) {
     return <ConfigError />;
@@ -121,7 +127,7 @@ const AppContent = () => {
       <header className="px-2 pt-6 pb-2 flex items-center justify-between">
         <div className="flex items-center">
           <img 
-            src="https://i.ibb.co/jkgvKQQg/freepik-eu-quero-uma-logo-que-siga-o-conceito-da-img1-que-1071.png" 
+            src={isDark ? LOGO_DARK : LOGO_LIGHT}
             alt="Logo" 
             className="h-[150px] w-auto object-contain -ml-4" 
           />
@@ -199,8 +205,8 @@ const AppContent = () => {
               )}
             </AnimatePresence>
           </div>
-          <div className="w-12 h-12 rounded-full bg-interactive-accent/20 border-2 border-white overflow-hidden shadow-sm">
-            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} alt="avatar" className="w-full h-full object-cover" />
+          <div className="w-12 h-12 rounded-full bg-interactive-accent/20 border-2 border-white dark:border-white/10 overflow-hidden shadow-sm">
+            <img src={user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} alt="avatar" className="w-full h-full object-cover" />
           </div>
         </div>
       </header>
