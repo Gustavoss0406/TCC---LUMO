@@ -81,6 +81,12 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
           .limit(1)
           .single();
 
+        console.log('Dashboard Sync:', { 
+          deviceIds, 
+          activeState: deviceState, 
+          lastSync: deviceState?.last_sync 
+        });
+
         if (deviceState) {
           setState(deviceState);
         }

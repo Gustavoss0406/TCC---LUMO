@@ -126,16 +126,41 @@ def get_app_path(app_name):
 def wait_for_device_registration():
     """Loop infinito até encontrar o dispositivo no banco."""
     print(f"🔎 Procurando dispositivo com código: {DEVICE_CODE}")
-    print(f"👉 Acesse o app e cadastre um novo dispositivo com este código.")
+    print(f"👉 Se demorar, verifique se o código no site é exatamente: {DEVICE_CODE}")
     
     while True:
         try:
-            response = supabase.table("devices").select("id").eq("device_code", DEVICE_CODE).execute()
+            # 1. Tenta buscar (Case Insensitive com ilike)
+            response = supabase.table("devices") \
+                .select("id") \
+                .ilike("device_code", DEVICE_CODE) \
+                .order("created_at", desc=True) \
+                .limit(1) \
+                .execute()
+                
             if response.data and len(response.data) > 0:
                 d_id = response.data[0]['id']
                 print(f"✅ Dispositivo conectado! ID: {d_id}")
                 return d_id
+            
+            # 2. Se não achou, tenta CRIAR o dispositivo automaticamente (se RLS permitir)
+            # Isso resolve casos onde a leitura é bloqueada mas escrita é permitida,
+            # ou se o usuário esqueceu de criar no site.
+            print("   ↳ Tentando registrar dispositivo automaticamente...")
+            new_device = supabase.table("devices").insert({
+                "device_code": DEVICE_CODE,
+                "name": f"Desktop-{int(time.time())}"
+                # user_id geralmente é necessário, mas se RLS permitir anon, vai funcionar.
+                # Se falhar, vai cair no except e tentar buscar de novo.
+            }).execute()
+            
+            if new_device.data and len(new_device.data) > 0:
+                d_id = new_device.data[0]['id']
+                print(f"✅ Dispositivo Criado e Conectado! ID: {d_id}")
+                return d_id
+
         except Exception as e:
+            # Ignora erros temporários
             pass
         
         sys.stdout.write(".")
@@ -295,6 +320,7 @@ def main():
             # Sincronizar Estado (Realtime)
             if now - last_send_time >= SEND_INTERVAL:
                 payload = {
+                    "device_id": device_id,
                     "state": "active",
                     "productivity": score,
                     "current_activity": key,
@@ -304,7 +330,8 @@ def main():
                     "app_usage": app_usage_seconds,
                     "last_sync": datetime.utcnow().isoformat()
                 }
-                supabase.table("device_state").update(payload).eq("device_id", device_id).execute()
+                # Upsert para garantir que o registro exista
+                supabase.table("device_state").upsert(payload, on_conflict="device_id").execute()
                 last_send_time = now
 
             # Salvar Log (Histórico)

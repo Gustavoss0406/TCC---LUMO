@@ -61,42 +61,83 @@ const DevicePage = () => {
     setError('');
 
     try {
-      // In a real app, we would verify the device code against a database of valid hardware IDs
-      // For this demo, we'll simulate a successful pairing
-      
-      const { data, error } = await supabase
+      // 1. Check if device already exists (e.g. created by Python script)
+      const { data: existingDevices, error: checkError } = await supabase
         .from('devices')
-        .insert([
-          {
-            user_id: user.id,
-            device_code: deviceCode,
-            name: deviceName || 'My FocusBuddy'
-          }
-        ])
-        .select();
+        .select('*')
+        .eq('device_code', deviceCode);
 
-      if (error) throw error;
+      if (checkError) throw checkError;
 
-      const newDevice = data[0];
+      let newDevice = null;
 
-      // Initialize device state
-      await supabase.from('device_state').insert({
-        device_id: newDevice.id,
-        state: 'active',
-        productivity: 0,
-        current_activity: 'Offline',
-        app_usage: {},
-        last_sync: new Date().toISOString(),
-        productive_time: 0,
-        neutral_time: 0,
-        distracting_time: 0
-      });
+      if (existingDevices && existingDevices.length > 0) {
+        const existingDevice = existingDevices[0];
+
+        // If already mine
+        if (existingDevice.user_id === user.id) {
+          throw new Error('Este dispositivo já está vinculado à sua conta.');
+        }
+
+        // If owned by someone else (and not null)
+        if (existingDevice.user_id && existingDevice.user_id !== user.id) {
+           throw new Error('Este código de dispositivo já está em uso por outro usuário.');
+        }
+
+        // Claim device (update owner)
+        const { data: updatedDevice, error: updateError } = await supabase
+          .from('devices')
+          .update({ 
+            user_id: user.id, 
+            name: deviceName || existingDevice.name || 'My FocusBuddy' 
+          })
+          .eq('id', existingDevice.id)
+          .select()
+          .single();
+        
+        if (updateError) {
+            // Fallback: If update fails (RLS), try to delete and recreate if we can
+            // But usually this means we can't claim it.
+            throw new Error('Não foi possível vincular o dispositivo existente. Tente deletá-lo manualmente ou use outro código.');
+        }
+        newDevice = updatedDevice;
+
+      } else {
+        // 2. Create new device
+        const { data, error } = await supabase
+          .from('devices')
+          .insert([
+            {
+              user_id: user.id,
+              device_code: deviceCode,
+              name: deviceName || 'My FocusBuddy'
+            }
+          ])
+          .select();
+
+        if (error) throw error;
+        newDevice = data[0];
+
+        // Initialize state
+        await supabase.from('device_state').insert({
+          device_id: newDevice.id,
+          state: 'active',
+          productivity: 0,
+          current_activity: 'Offline',
+          app_usage: {},
+          last_sync: new Date().toISOString(),
+          productive_time: 0,
+          neutral_time: 0,
+          distracting_time: 0
+        });
+      }
 
       setDevices([...devices, newDevice]);
       setShowPairForm(false);
       setDeviceCode('');
       setDeviceName('');
     } catch (err: any) {
+      console.error(err);
       setError(err.message || 'Falha ao parear dispositivo');
     } finally {
       setLoading(false);
