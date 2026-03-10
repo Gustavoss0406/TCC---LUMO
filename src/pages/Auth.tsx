@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { motion } from 'motion/react';
-import { LogIn, UserPlus, Mail, Lock, User as UserIcon, ArrowRight, Zap } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,6 +10,23 @@ const Auth = () => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}`
+        }
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,163 +61,121 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Background Graphic Elements */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.1, 1],
-            rotate: [0, 5, 0],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-24 -right-24 w-96 h-96 bg-interactive-accent/20 rounded-full blur-3xl" 
-        />
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.2, 1],
-            rotate: [0, -10, 0],
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute -bottom-48 -left-48 w-[500px] h-[500px] bg-interactive-accent/10 rounded-full blur-3xl" 
-        />
+    <div className="min-h-screen bg-interactive-accent flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Elementos Decorativos de Fundo */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-32 -right-32 w-96 h-96 bg-white/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-48 -left-48 w-[600px] h-[600px] bg-white/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="w-full max-w-md space-y-10 relative z-10">
-        {/* Logo/Icon Area */}
-        <div className="text-center space-y-6">
-          <motion.div 
+      <motion.div 
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", bounce: 0.4, duration: 0.8 }}
+        className="w-full max-w-md bg-white p-8 sm:p-10 rounded-[48px] shadow-2xl shadow-black/10 space-y-8 relative z-10"
+      >
+        <div className="flex flex-col items-center gap-4 text-center">
+          <motion.img 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", bounce: 0.5 }}
-            className="inline-block"
-          >
-            <img 
-              src="https://i.ibb.co/tPwNdBxH/freepik-eu-quero-uma-logo-que-siga-o-conceito-da-img1-que-1069.png" 
-              alt="FocusBuddy" 
-              className="h-28 w-auto mx-auto object-contain rounded-3xl shadow-xl shadow-interactive-accent/20"
-            />
-          </motion.div>
-          
-          <div className="space-y-2">
-            <motion.h1 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="text-5xl font-black text-content-primary tracking-tighter"
-            >
-              Bem-vindo
-            </motion.h1>
-            <motion.p 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              className="text-content-secondary text-lg font-medium"
-            >
-              {isLogin ? 'Acesse seu hub de produtividade' : 'Crie sua conta para começar a focar'}
-            </motion.p>
+            transition={{ delay: 0.2, type: "spring" }}
+            src="/icons/icon-192.png" 
+            className="w-24 h-24 rounded-[32px] shadow-lg shadow-black/5 object-cover" 
+            alt="Logo"
+          />
+          <div>
+            <h1 className="text-4xl font-black tracking-tighter text-black mb-1">FocusBuddy</h1>
+            <p className="text-gray-400 font-bold text-lg tracking-tight">Seu assistente de foco pessoal</p>
           </div>
         </div>
 
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="bg-background-elevated p-8 space-y-6 rounded-[40px] shadow-2xl shadow-black/5 border border-white"
-        >
-          {error && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-sentiment-negative/10 border border-sentiment-negative/20 text-sentiment-negative px-4 py-3 rounded-2xl text-sm font-bold text-center"
-            >
-              {error}
-            </motion.div>
-          )}
+        {error && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="bg-red-50 text-red-500 px-4 py-3 rounded-2xl text-sm font-bold text-center border border-red-100"
+          >
+            {error}
+          </motion.div>
+        )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-4">
+          <button 
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="w-full py-4 rounded-full bg-black text-white font-bold text-lg flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/20 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {loading ? <Loader2 className="animate-spin" /> : <img src="/google.svg" className="w-6 h-6" alt="Google" />}
+            <span>Continuar com Google</span>
+          </button>
+
+          <div className="flex items-center gap-4 text-gray-300 font-black text-[10px] uppercase tracking-widest py-2">
+            <div className="h-0.5 flex-1 bg-gray-100 rounded-full" />
+            OU
+            <div className="h-0.5 flex-1 bg-gray-100 rounded-full" />
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-3">
             {!isLogin && (
-              <div className="space-y-2">
-                <label className="text-xs font-black text-content-tertiary uppercase tracking-widest ml-1">Nome Completo</label>
-                <div className="relative group">
-                  <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-content-tertiary group-focus-within:text-content-primary transition-colors" size={20} />
-                  <input
-                    type="text"
-                    placeholder="João Silva"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-14 px-6 py-5 bg-background-neutral/50 border-2 border-transparent rounded-[24px] focus:border-interactive-accent focus:bg-background-elevated transition-all outline-none font-bold text-lg placeholder:font-medium"
-                    required
-                  />
-                </div>
-              </div>
+              <input
+                type="text"
+                placeholder="Nome Completo"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-black transition-all outline-none font-bold text-lg placeholder:text-gray-400 text-black"
+                required
+              />
             )}
+            <input
+              type="email"
+              placeholder="E-mail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-black transition-all outline-none font-bold text-lg placeholder:text-gray-400 text-black"
+              required
+            />
+            <input
+              type="password"
+              placeholder="Senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-black transition-all outline-none font-bold text-lg placeholder:text-gray-400 text-black"
+              required
+            />
             
-            <div className="space-y-2">
-              <label className="text-xs font-black text-content-tertiary uppercase tracking-widest ml-1">Endereço de E-mail</label>
-              <div className="relative group">
-                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-content-tertiary group-focus-within:text-content-primary transition-colors" size={20} />
-                <input
-                  type="email"
-                  placeholder="nome@empresa.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-14 px-6 py-5 bg-background-neutral/50 border-2 border-transparent rounded-[24px] focus:border-interactive-accent focus:bg-background-elevated transition-all outline-none font-bold text-lg placeholder:font-medium"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-black text-content-tertiary uppercase tracking-widest ml-1">Senha</label>
-              <div className="relative group">
-                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-content-tertiary group-focus-within:text-content-primary transition-colors" size={20} />
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-14 px-6 py-5 bg-background-neutral/50 border-2 border-transparent rounded-[24px] focus:border-interactive-accent focus:bg-background-elevated transition-all outline-none font-bold text-lg placeholder:font-medium"
-                  required
-                />
-              </div>
-            </div>
-
             <button
               type="submit"
               disabled={loading}
-              className="relative overflow-hidden shimmer-effect w-full px-6 py-5 mt-4 rounded-full font-black text-lg text-center transition-all duration-300 active:scale-[0.97] flex items-center justify-center gap-2 bg-interactive-accent text-content-primary hover:bg-bright-green shadow-xl shadow-interactive-accent/20"
+              className="w-full py-4 mt-2 rounded-full bg-interactive-accent text-black font-black text-lg hover:bg-bright-green transition-all shadow-lg shadow-interactive-accent/20 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <div className="w-6 h-6 border-2 border-content-primary/30 border-t-content-primary rounded-full animate-spin" />
+                <Loader2 className="animate-spin" />
               ) : (
                 <>
-                  <span>{isLogin ? 'Entrar' : 'Criar Conta'}</span>
-                  <ArrowRight size={22} strokeWidth={3} />
+                  <span>{isLogin ? 'Entrar com E-mail' : 'Criar Conta'}</span>
+                  <ArrowRight size={20} strokeWidth={3} />
                 </>
               )}
             </button>
           </form>
+        </div>
 
-          <div className="relative py-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t-2 border-background-neutral"></div>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background-elevated px-4 text-content-tertiary font-black tracking-widest">Ou continue com</span>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="w-full px-6 py-4 rounded-full font-bold text-center transition-all duration-300 active:scale-[0.97] flex items-center justify-center gap-2 bg-background-neutral text-content-primary hover:bg-background-neutral/80"
-          >
-            {isLogin ? "Criar nova conta" : "Acessar conta existente"}
-          </button>
-        </motion.div>
-
-        <p className="text-center text-xs text-content-tertiary font-medium px-8">
-          Ao continuar, você concorda com os <span className="text-interactive-primary cursor-pointer">Termos de Serviço</span> e <span className="text-interactive-primary cursor-pointer">Política de Privacidade</span> do FocusBuddy.
-        </p>
-      </div>
+        <div className="text-center pt-2">
+          <p className="font-bold text-gray-400 text-sm">
+            {isLogin ? 'Não tem conta?' : 'Já tem conta?'}
+            <button 
+              onClick={() => setIsLogin(!isLogin)} 
+              className="ml-2 text-black hover:underline transition-all"
+            >
+              {isLogin ? 'Cadastre-se' : 'Entrar'}
+            </button>
+          </p>
+        </div>
+      </motion.div>
+      
+      <p className="mt-8 text-black/40 font-bold text-xs text-center max-w-xs mx-auto">
+        Ao continuar, você concorda com nossos Termos e Política de Privacidade.
+      </p>
     </div>
   );
 };
