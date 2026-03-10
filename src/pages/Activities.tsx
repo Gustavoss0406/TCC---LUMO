@@ -10,6 +10,7 @@ import { Monitor, Search, Filter, ArrowUpRight, ArrowDownRight, Clock, Layout, R
 const Activities = () => {
   const { user } = useAuth();
   const [log, setLog] = useState<ProductivityLog | null>(null);
+  const [appIcons, setAppIcons] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [fetching, setFetching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,6 +20,13 @@ const Activities = () => {
     if (showSync) setFetching(true);
     
     try {
+      // Fetch icons map
+      const { data: icons } = await supabase.from('app_icons').select('name, icon_url');
+      if (icons) {
+        const iconMap = icons.reduce((acc, curr) => ({ ...acc, [curr.name]: curr.icon_url }), {});
+        setAppIcons(iconMap);
+      }
+
       const { data: devices } = await supabase
         .from('devices')
         .select('id')
@@ -63,7 +71,8 @@ const Activities = () => {
   }
 
   const formatTime = (seconds: number | undefined | null) => {
-    const s = seconds || 0;
+    if (typeof seconds !== 'number' || isNaN(seconds)) return '0m';
+    const s = Math.max(0, seconds);
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
     if (h > 0) return `${h}h ${m}m`;
@@ -174,6 +183,7 @@ const Activities = () => {
                     <div className="flex items-center gap-5 min-w-0">
                       <AppLogo 
                         appName={app} 
+                        iconUrl={appIcons[app]}
                         className="w-16 h-16 rounded-2xl bg-background-screen flex-shrink-0 flex items-center justify-center text-content-tertiary border border-border-neutral group-hover:border-interactive-accent/50 group-hover:text-interactive-primary transition-all shadow-sm p-3"
                       />
                       <div className="space-y-1.5 min-w-0">

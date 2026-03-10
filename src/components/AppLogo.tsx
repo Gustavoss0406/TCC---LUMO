@@ -4,16 +4,11 @@ import { Monitor } from 'lucide-react';
 interface AppLogoProps {
   appName: string;
   className?: string;
+  iconUrl?: string;
 }
 
-const AppLogo: React.FC<AppLogoProps> = ({ appName, className }) => {
+const AppLogo: React.FC<AppLogoProps> = ({ appName, className, iconUrl }) => {
   const [error, setError] = useState(false);
-
-  const getDomain = (name: string) => {
-    return name.toLowerCase().replace(/ /g, '').split('.')[0] + '.com';
-  };
-
-  const logoUrl = `https://logo.dev/${getDomain(appName)}`;
 
   if (error) {
     return (
@@ -23,11 +18,25 @@ const AppLogo: React.FC<AppLogoProps> = ({ appName, className }) => {
     );
   }
 
+  if (iconUrl) {
+    return (
+      <img 
+        src={iconUrl}
+        alt={`${appName} logo`}
+        className={`${className} object-contain`}
+        onError={() => setError(true)}
+      />
+    );
+  }
+
+  // Fallback: Try to guess domain or use DiceBear initials
+  const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(appName)}&background=random&color=fff&size=128`;
+
   return (
     <img 
-      src={logoUrl}
+      src={fallbackUrl}
       alt={`${appName} logo`}
-      className={className}
+      className={`${className} object-cover`}
       onError={() => setError(true)}
     />
   );
