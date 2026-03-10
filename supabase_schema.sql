@@ -88,3 +88,31 @@ alter table public.daily_goals enable row level security;
 create policy "Users can view their own goals" on public.daily_goals for select using (auth.uid() = user_id);
 create policy "Users can update their own goals" on public.daily_goals for update using (auth.uid() = user_id);
 create policy "Users can insert their own goals" on public.daily_goals for insert with check (auth.uid() = user_id);
+
+-- 4. Storage para Avatares
+-- Criação do bucket (se não existir)
+-- Nota: Você precisa executar isso no SQL Editor do Supabase Dashboard se não tiver permissão direta aqui.
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Policies para Storage (Drop para recriar)
+DROP POLICY IF EXISTS "Avatar Public Access" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can upload avatars" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update own avatars" ON storage.objects;
+
+-- Criar Policies
+CREATE POLICY "Avatar Public Access" ON storage.objects
+  FOR SELECT USING (bucket_id = 'avatars');
+
+CREATE POLICY "Authenticated users can upload avatars" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'avatars' AND
+    auth.role() = 'authenticated'
+  );
+
+CREATE POLICY "Users can update own avatars" ON storage.objects
+  FOR UPDATE USING (
+    bucket_id = 'avatars' AND
+    auth.uid() = owner
+  );
