@@ -25,6 +25,7 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
   const { user } = useAuth();
   const { theme } = useTheme();
   const [state, setState] = useState<DeviceState | null>(null);
+  const [dailyGoal, setDailyGoal] = useState(14400);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
 
@@ -33,6 +34,17 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
     if (showSync) setSyncing(true);
     
     try {
+      // Fetch user profile for daily goal
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('daily_goal_seconds')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile?.daily_goal_seconds) {
+        setDailyGoal(profile.daily_goal_seconds);
+      }
+
       const { data: devices } = await supabase
         .from('devices')
         .select('id')
@@ -223,9 +235,16 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
       <motion.div variants={itemVariants} className="bg-background-elevated p-6 space-y-8 rounded-[40px] shadow-xl shadow-black/5 border border-white/50 dark:border-white/5">
         <div className="space-y-6">
           {[
-            { label: 'Sessões de Foco', status: 'Excelente', color: 'text-sentiment-positive', value: '95%', sub: '1 perdida', target: 'activities' },
-            { label: 'Uso do Tempo', status: 'Razoável', color: 'text-sentiment-warning', value: formatTime(state.productive_time), sub: '-15%', subColor: 'text-sentiment-warning', target: 'history' },
-            { label: 'Sequência', status: 'Bom', color: 'text-sentiment-positive', value: '8 dias', sub: null, target: null }
+            { 
+              label: 'Meta Diária', 
+              status: Math.round((state.productive_time / dailyGoal) * 100) >= 100 ? 'Concluída' : 'Em Andamento', 
+              color: Math.round((state.productive_time / dailyGoal) * 100) >= 100 ? 'text-sentiment-positive' : 'text-interactive-primary', 
+              value: `${Math.round((state.productive_time / dailyGoal) * 100)}%`, 
+              sub: Math.round((state.productive_time / dailyGoal) * 100) >= 100 ? 'Parabéns!' : `Faltam ${formatTime(Math.max(0, dailyGoal - state.productive_time))}`, 
+              target: 'profile' 
+            },
+            { label: 'Uso do Tempo', status: 'Razoável', color: 'text-sentiment-warning', value: formatTime(state.productive_time), sub: 'Produtivo', subColor: 'text-interactive-primary', target: 'history' },
+            { label: 'Sequência', status: 'Bom', color: 'text-sentiment-positive', value: '1 dia', sub: null, target: null }
           ].map((stat, i) => (
             <React.Fragment key={stat.label}>
               <div 
