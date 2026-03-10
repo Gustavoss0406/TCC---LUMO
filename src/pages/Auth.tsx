@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { motion } from 'motion/react';
 import { ArrowRight, Loader2 } from 'lucide-react';
+import { useTheme } from '../hooks/useTheme';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,6 +11,11 @@ const Auth = () => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const { theme } = useTheme();
+  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const LOGO_LIGHT = '/icons/icon-192.png';
+  const LOGO_DARK = 'https://i.ibb.co/jknDxrn5/Logo-darkmode.png';
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -79,7 +85,7 @@ const Auth = () => {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, type: "spring" }}
-            src="/icons/icon-192.png" 
+            src={isDark ? LOGO_DARK : LOGO_LIGHT}
             className="w-24 h-24 rounded-[32px] shadow-lg shadow-black/5 object-cover" 
             alt="Logo"
           />

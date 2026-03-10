@@ -19,9 +19,11 @@ import {
 } from 'lucide-react';
 
 import { Skeleton } from '../components/Skeleton';
+import { useTheme } from '../hooks/useTheme';
 
 const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) => {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [state, setState] = useState<DeviceState | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -114,13 +116,23 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
 
   const getCharacterIcon = () => {
     const score = state.productivity;
+    const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    
     let gifUrl = '';
     
-    if (score >= 80) gifUrl = 'https://i.imgur.com/qQ1JEPb.gif';
-    else if (score >= 60) gifUrl = 'https://i.imgur.com/80cHdDZ.gif';
-    else if (score >= 40) gifUrl = 'https://i.imgur.com/avTauhm.gif';
-    else if (score >= 20) gifUrl = 'https://i.imgur.com/xmwrpgB.gif';
-    else gifUrl = 'https://i.imgur.com/PNzWixv.gif';
+    if (isDark) {
+      if (score >= 80) gifUrl = 'https://i.imgur.com/xUWrIlU.gif';
+      else if (score >= 60) gifUrl = 'https://i.imgur.com/RsGov9s.gif';
+      else if (score >= 40) gifUrl = 'https://i.imgur.com/arjNC7C.gif';
+      else if (score >= 20) gifUrl = 'https://i.imgur.com/xMLdal7.gif';
+      else gifUrl = 'https://i.imgur.com/15P9Nv9.gif';
+    } else {
+      if (score >= 80) gifUrl = 'https://i.imgur.com/qQ1JEPb.gif';
+      else if (score >= 60) gifUrl = 'https://i.imgur.com/80cHdDZ.gif';
+      else if (score >= 40) gifUrl = 'https://i.imgur.com/avTauhm.gif';
+      else if (score >= 20) gifUrl = 'https://i.imgur.com/xmwrpgB.gif';
+      else gifUrl = 'https://i.imgur.com/PNzWixv.gif';
+    }
 
     return (
       <img 
