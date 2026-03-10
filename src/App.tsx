@@ -73,6 +73,16 @@ const ConfigError = () => (
 
 const AppContent = () => {
   const { user, loading } = useAuth();
+
+  // clear any previously installed service workers so we always run latest code
+  React.useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+      });
+    }
+  }, []);
+
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showNotifications, setShowNotifications] = useState(false);

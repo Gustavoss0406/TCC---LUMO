@@ -12,6 +12,13 @@ const Activities = () => {
   const [streak, setStreak] = useState(0);
   const [dailyGoal, setDailyGoal] = useState(14400);
 
+  // UI state
+  const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [appIcons, setAppIcons] = useState<Record<string, string>>({});
+  const [log, setLog] = useState<ProductivityLog | null>(null);
+
   const fetchData = async (showSync = false) => {
     if (!user) return;
     if (showSync) setFetching(true);
@@ -145,13 +152,13 @@ const Activities = () => {
       animate="show"
       className="space-y-8 pb-12 max-w-lg mx-auto"
     >
-      {/* <ActivityHero 
+      <ActivityHero 
         topFocus={topFocus} 
         topFocusTime={topFocusTime} 
         dailyGoal={dailyGoalStr} 
         streak={streak} 
         productivity={productivity} 
-      /> */}
+      />
       <motion.div variants={itemVariants} className="space-y-6">
         <div className="flex items-center justify-between px-1">
           <div>

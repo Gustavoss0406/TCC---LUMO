@@ -93,17 +93,17 @@ const History = () => {
 
   const chartData = logs.map(log => ({
     date: new Date(log.date).toLocaleDateString('pt-BR', { weekday: 'short' }),
-    score: log.productivity || 0,
+    score: log.productivity_score ?? log.productivity ?? 0,
     productive: Math.round((log.productive_time || 0) / 3600 * 10) / 10,
   }));
 
   const avgScore = logs.length > 0 
-    ? Math.round(logs.reduce((acc, curr) => acc + (curr.productivity || 0), 0) / logs.length)
+    ? Math.round(logs.reduce((acc, curr) => acc + (curr.productivity_score ?? curr.productivity ?? 0), 0) / logs.length)
     : 0;
 
-  const validLogs = logs.filter(log => log.productivity != null);
+  const validLogs = logs.filter(log => (log.productivity_score ?? log.productivity) != null);
   const bestDay = validLogs.length > 0
-    ? validLogs.sort((a, b) => (b.productivity || 0) - (a.productivity || 0))[0]
+    ? validLogs.sort((a, b) => ( (b.productivity_score ?? b.productivity ?? 0) - (a.productivity_score ?? a.productivity ?? 0) ))[0]
     : null;
 
   const totalFocusTime = logs.reduce((acc, curr) => acc + (curr.productive_time || 0), 0);

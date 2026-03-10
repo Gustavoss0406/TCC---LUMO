@@ -103,7 +103,7 @@ const DevicePage = () => {
           // Fallback: Delete and recreate if we can
           await supabase.from('devices').delete().eq('id', existingDevice.id);
           
-          const { data: newDevice, error: insertError } = await supabase
+          const { data: insertedDevice, error: insertError } = await supabase
             .from('devices')
             .insert([
               {
@@ -119,7 +119,7 @@ const DevicePage = () => {
             console.error('Insert failed:', insertError);
             throw new Error('Não foi possível vincular o dispositivo. Erro: ' + insertError.message);
           }
-          newDevice = newDevice[0];
+          newDevice = insertedDevice[0];
         }
         newDevice = updatedDevice;
 

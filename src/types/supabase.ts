@@ -22,7 +22,9 @@ export type ProductivityLog = {
   id: string;
   device_id: string;
   date: string;
-  productivity: number;
+  // newer schema uses productivity_score; older records might still have productivity
+  productivity?: number;
+  productivity_score?: number;
   productive_time: number;
   neutral_time: number;
   distracting_time: number;
