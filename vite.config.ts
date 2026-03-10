@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
         injectRegister: 'auto',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         workbox: {
+          maximumFileSizeToCacheInBytes: 4000000,
           globPatterns: ['**/*.{js,css,html,ico,png,svg}']
         },
         manifest: {
@@ -56,5 +57,16 @@ export default defineConfig(({ mode }) => {
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'react-router-dom'],
+            ui: ['lucide-react', 'motion'],
+            supabase: ['@supabase/supabase-js']
+          }
+        }
+      }
+    }
   };
 });
