@@ -91,7 +91,13 @@ const DevicePage = () => {
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza que deseja remover este dispositivo? Todos os dados vinculados a ele serão perdidos.')) return;
+
     try {
+      // Delete dependent records first to avoid foreign key violations
+      await supabase.from('device_state').delete().eq('device_id', id);
+      await supabase.from('productivity_logs').delete().eq('device_id', id);
+
       const { error } = await supabase
         .from('devices')
         .delete()
@@ -99,8 +105,9 @@ const DevicePage = () => {
 
       if (error) throw error;
       setDevices(devices.filter(d => d.id !== id));
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting device:', err);
+      alert('Erro ao excluir dispositivo: ' + err.message);
     }
   };
 
