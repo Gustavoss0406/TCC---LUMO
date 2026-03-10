@@ -192,7 +192,7 @@ const History = () => {
                 {bestDay ? new Date(bestDay.date).toLocaleDateString('pt-BR', { weekday: 'long' }) : 'N/A'}
               </h3>
               <p className="text-lg font-medium opacity-90">
-                {bestDay ? `Maior pontuação de ${Math.round(bestDay.productivity)}` : 'Sem dados ainda'}
+                {bestDay ? `Maior pontuação de ${bestDay.productivity_score ?? bestDay.productivity ?? 0}%` : 'Sem dados ainda'}
               </p>
             </div>
             <div className="w-16 h-16 rounded-[24px] bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 shadow-lg">

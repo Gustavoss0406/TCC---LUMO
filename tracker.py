@@ -398,10 +398,10 @@ def main():
 
             total = time_productive + time_neutral + time_distracting
 
-            score = (time_productive / total * 100) if total > 0 else 0
+            score = round((time_productive / total * 100) if total > 0 else 0)
 
             sys.stdout.write(
-                f"\r[{status[:4].upper()}] {key[:20]:<20} | Score: {int(score)}% | Prod: {time_productive}s"
+                f"\r[{status[:4].upper()}] {key[:20]:<20} | Score: {score}% | Prod: {time_productive}s"
             )
 
             sys.stdout.flush()
