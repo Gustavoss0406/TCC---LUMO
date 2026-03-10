@@ -455,15 +455,19 @@ def main():
 
                 try:
                     supabase.table("productivity_logs").insert(log_data).execute()
-                except Exception:
-                    # If insert fails (duplicate), update
-                    supabase.table("productivity_logs") \
-                        .update(log_data) \
-                        .eq("device_code", DEVICE_CODE) \
-                        .eq("date", today) \
-                        .execute()
-
-                print(" [Salvo]")
+                    print(f" [Logs salvos]")
+                except Exception as e:
+                    print(f"Erro no insert productivity_logs: {e}")
+                    try:
+                        result = supabase.table("productivity_logs") \
+                            .update(log_data) \
+                            .eq("device_code", DEVICE_CODE) \
+                            .eq("date", today) \
+                            .execute()
+                        print(f'Update logs result: {result}')
+                        print(f" [Logs atualizados]")
+                    except Exception as e2:
+                        print(f"Erro no update productivity_logs: {e2}")
 
                 last_log_time = now
 

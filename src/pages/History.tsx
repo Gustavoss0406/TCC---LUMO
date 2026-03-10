@@ -50,6 +50,7 @@ const History = () => {
       if (devices && devices.length > 0) {
         const deviceCode = devices[0].device_code;
         const deviceId = devices[0].id;
+        console.log('History deviceCode:', deviceCode);
         
         const { data: history } = await supabase
           .from('productivity_logs')
@@ -57,6 +58,8 @@ const History = () => {
           .eq('device_code', deviceCode)
           .order('date', { ascending: true })
           .limit(30);
+
+        console.log('History logs:', history);
 
         if (history) {
           setLogs(history);
