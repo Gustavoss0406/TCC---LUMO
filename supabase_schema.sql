@@ -89,7 +89,20 @@ create policy "Users can view their own goals" on public.daily_goals for select 
 create policy "Users can update their own goals" on public.daily_goals for update using (auth.uid() = user_id);
 create policy "Users can insert their own goals" on public.daily_goals for insert with check (auth.uid() = user_id);
 
--- 4. Storage para Avatares
+-- 4. Tabela App Icons (Armazenamento de Ícones de Apps)
+create table if not exists public.app_icons (
+  id uuid default uuid_generate_v4() primary key,
+  name text not null unique,
+  domain text,
+  icon_url text, -- Removido NOT NULL para evitar erros
+  type text default 'app',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.app_icons enable row level security;
+create policy "Public view app icons" on public.app_icons for select using (true);
+
+-- 5. Storage para Avatares
 -- Criação do bucket (se não existir)
 -- Nota: Você precisa executar isso no SQL Editor do Supabase Dashboard se não tiver permissão direta aqui.
 INSERT INTO storage.buckets (id, name, public) 

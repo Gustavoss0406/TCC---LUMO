@@ -26,6 +26,7 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
   const { theme } = useTheme();
   const [state, setState] = useState<DeviceState | null>(null);
   const [dailyGoal, setDailyGoal] = useState(14400);
+  const [streak, setStreak] = useState(0);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
 
@@ -43,6 +44,23 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
       
       if (profile?.daily_goal_seconds) {
         setDailyGoal(profile.daily_goal_seconds);
+      }
+
+      // Fetch streak from daily_goals
+      const { data: goals } = await supabase
+        .from('daily_goals')
+        .select('date, completed')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (goals) {
+        let currentStreak = 0;
+        for (const goal of goals) {
+          if (goal.completed) currentStreak++;
+          else if (goal.date === new Date().toISOString().split('T')[0]) continue; // Skip today if not yet completed
+          else break;
+        }
+        setStreak(currentStreak);
       }
 
       const { data: devices } = await supabase
@@ -244,8 +262,15 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
               target: 'profile' 
             },
             { label: 'Uso do Tempo', status: 'Razoável', color: 'text-sentiment-warning', value: formatTime(state.productive_time), sub: 'Produtivo', subColor: 'text-interactive-primary', target: 'history' },
-            { label: 'Sequência', status: 'Bom', color: 'text-sentiment-positive', value: '1 dia', sub: null, target: null }
-          ].map((stat, i) => (
+             { 
+               label: 'Sequência', 
+               status: streak > 0 ? 'Fogo!' : 'Começar', 
+               color: 'text-sentiment-warning', 
+               value: `${streak} ${streak === 1 ? 'dia' : 'dias'}`, 
+               sub: streak > 0 ? 'Mantenha o foco!' : 'Bata sua meta hoje', 
+               target: null 
+             }
+           ].map((stat, i) => (
             <React.Fragment key={stat.label}>
               <div 
                 onClick={() => stat.target && setActiveTab(stat.target)}
