@@ -63,19 +63,22 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
         setStreak(currentStreak);
       }
 
-      const { data: devices } = await supabase
+      // Fetch user devices
+      const { data: userDevices } = await supabase
         .from('devices')
         .select('id')
-        .eq('user_id', user.id)
-        .limit(1);
+        .eq('user_id', user.id);
 
-      if (devices && devices.length > 0) {
-        const deviceId = devices[0].id;
+      if (userDevices && userDevices.length > 0) {
+        const deviceIds = userDevices.map(d => d.id);
         
+        // Fetch the most recently active device state
         const { data: deviceState } = await supabase
           .from('device_state')
           .select('*')
-          .eq('device_id', deviceId)
+          .in('device_id', deviceIds)
+          .order('last_sync', { ascending: false })
+          .limit(1)
           .single();
 
         if (deviceState) {
