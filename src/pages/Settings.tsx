@@ -52,19 +52,20 @@ const Settings = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) => 
         className="space-y-8 max-w-lg mx-auto pb-12"
       >
         {/* Profile Header */}
-        <motion.div variants={itemVariants} className="bg-background-elevated p-10 flex flex-col items-center text-center space-y-6 relative overflow-hidden rounded-[40px] shadow-2xl shadow-black/10 border border-white">
+        <motion.div variants={itemVariants} className="bg-background-elevated p-10 flex flex-col items-center text-center space-y-6 relative overflow-hidden rounded-[40px] shadow-2xl shadow-black/10 border border-white/50 dark:border-white/5">
           <div className="absolute top-0 right-0 w-32 h-32 bg-interactive-accent/20 rounded-full -mr-16 -mt-16 opacity-50" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-interactive-accent/20 rounded-full -ml-12 -mb-12 opacity-30" />
           
           <div className="relative">
-            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-2xl relative z-10">
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-white/10 shadow-2xl relative z-10 bg-background-neutral">
               <img 
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} 
+                src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} 
                 alt="Avatar" 
+                className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
             </div>
-            <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-interactive-primary rounded-full border-4 border-white flex items-center justify-center text-white z-20 shadow-lg">
+            <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-interactive-primary rounded-full border-4 border-white dark:border-background-elevated flex items-center justify-center text-white z-20 shadow-lg">
               <User size={20} fill="currentColor" />
             </div>
           </div>
@@ -87,10 +88,10 @@ const Settings = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) => 
               key={item.id}
               variants={itemVariants}
               onClick={item.action}
-              className="w-full bg-background-elevated p-5 flex items-center justify-between group hover:border-interactive-accent/50 transition-all rounded-[32px] shadow-lg shadow-black/5 border border-white"
+              className="w-full bg-background-elevated p-5 flex items-center justify-between group hover:border-interactive-accent/50 transition-all rounded-[32px] shadow-lg shadow-black/5 border border-white/50 dark:border-white/5"
             >
               <div className="flex items-center gap-5">
-                <div className={`w-16 h-16 rounded-[24px] ${item.bg} ${item.color} flex items-center justify-center border border-white shadow-sm group-hover:scale-110 transition-transform`}>
+                <div className={`w-16 h-16 rounded-[24px] ${item.bg} ${item.color} flex items-center justify-center border border-white/50 dark:border-white/10 shadow-sm group-hover:scale-110 transition-transform`}>
                   <item.icon size={28} />
                 </div>
                 <span className="font-bold text-content-primary text-xl">{item.label}</span>
@@ -106,7 +107,7 @@ const Settings = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) => 
         <motion.button 
           variants={itemVariants}
           onClick={signOut}
-          className="relative overflow-hidden shimmer-effect w-full bg-background-elevated p-6 flex items-center justify-center gap-3 text-sentiment-negative font-black hover:bg-sentiment-negative/10 hover:border-sentiment-negative/20 transition-all text-lg rounded-[32px] shadow-lg shadow-black/5 border border-white"
+          className="relative overflow-hidden shimmer-effect w-full bg-background-elevated p-6 flex items-center justify-center gap-3 text-sentiment-negative font-black hover:bg-sentiment-negative/10 hover:border-sentiment-negative/20 transition-all text-lg rounded-[32px] shadow-lg shadow-black/5 border border-white/50 dark:border-white/5"
         >
           <LogOut size={24} />
           Encerrar Sessão

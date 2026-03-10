@@ -180,7 +180,7 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
         </div>
         
         <div className="w-full flex justify-center px-10 relative z-10">
-          <span className="normal-case font-bold bg-background-elevated/50 backdrop-blur-sm px-4 py-1.5 rounded-full text-content-primary border border-white/50 shadow-sm text-sm">
+          <span className="normal-case font-bold bg-background-elevated/50 backdrop-blur-sm px-4 py-1.5 rounded-full text-content-primary border border-white/50 dark:border-white/10 shadow-sm text-sm">
             Estado do Buddy: <span className="text-interactive-primary">{getScoreLabel(state.productivity)}</span>
           </span>
         </div>
@@ -189,7 +189,7 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
       {/* Score Card */}
       <motion.div 
         variants={itemVariants}
-        className="bg-background-elevated p-8 flex flex-col items-center text-center relative overflow-hidden group rounded-[40px] shadow-xl shadow-black/5 border border-white"
+        className="bg-background-elevated p-8 flex flex-col items-center text-center relative overflow-hidden group rounded-[40px] shadow-xl shadow-black/5 border border-white/50 dark:border-white/5"
       >
         <span className="text-content-tertiary text-xs font-black uppercase tracking-widest mb-2">
           Índice de Produtividade Atual
@@ -220,7 +220,7 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
       </motion.div>
 
       {/* Detailed Stats */}
-      <motion.div variants={itemVariants} className="bg-background-elevated p-6 space-y-8 rounded-[40px] shadow-xl shadow-black/5 border border-white">
+      <motion.div variants={itemVariants} className="bg-background-elevated p-6 space-y-8 rounded-[40px] shadow-xl shadow-black/5 border border-white/50 dark:border-white/5">
         <div className="space-y-6">
           {[
             { label: 'Sessões de Foco', status: 'Excelente', color: 'text-sentiment-positive', value: '95%', sub: '1 perdida', target: 'activities' },
@@ -255,7 +255,7 @@ const Dashboard = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) =>
       </motion.div>
 
       {/* Activity Breakdown */}
-      <motion.div variants={itemVariants} className="bg-background-elevated p-8 space-y-8 relative overflow-hidden rounded-[40px] shadow-xl shadow-black/5 border border-white">
+      <motion.div variants={itemVariants} className="bg-background-elevated p-8 space-y-8 relative overflow-hidden rounded-[40px] shadow-xl shadow-black/5 border border-white/50 dark:border-white/5">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-black text-content-primary text-2xl tracking-tight">Uso de Atividades</h3>

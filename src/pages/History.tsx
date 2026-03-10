@@ -246,7 +246,7 @@ const History = () => {
       {/* Main Chart */}
       <motion.div 
         variants={itemVariants}
-        className="bg-background-elevated p-8 space-y-8 relative overflow-hidden rounded-[40px] shadow-xl shadow-black/5 border border-white"
+        className="bg-background-elevated p-8 space-y-8 relative overflow-hidden rounded-[40px] shadow-xl shadow-black/5 border border-white/50 dark:border-white/5"
       >
         <div className="absolute top-0 right-0 w-32 h-32 bg-interactive-accent/20 rounded-full -mr-16 -mt-16 opacity-50" />
         

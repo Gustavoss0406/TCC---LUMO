@@ -146,7 +146,7 @@ const DevicePage = () => {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-background-elevated p-8 space-y-8 rounded-[40px] shadow-2xl shadow-black/10 relative overflow-hidden border border-white"
+            className="bg-background-elevated p-8 space-y-8 rounded-[40px] shadow-2xl shadow-black/10 relative overflow-hidden border border-white/50 dark:border-white/5"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-interactive-accent/20 rounded-full -mr-16 -mt-16 opacity-50" />
             
@@ -244,7 +244,7 @@ const DevicePage = () => {
             ))}
           </div>
         ) : devices.length === 0 ? (
-          <div className="bg-background-elevated p-16 flex flex-col items-center justify-center text-center space-y-6 rounded-[40px] shadow-lg shadow-black/5 border border-white">
+          <div className="bg-background-elevated p-16 flex flex-col items-center justify-center text-center space-y-6 rounded-[40px] shadow-lg shadow-black/5 border border-white/50 dark:border-white/5">
             <div className="w-24 h-24 rounded-3xl bg-background-neutral flex items-center justify-center text-content-tertiary border border-border-neutral shadow-inner">
               <Smartphone size={40} strokeWidth={1.5} />
             </div>
@@ -261,7 +261,7 @@ const DevicePage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-background-elevated p-8 space-y-8 group hover:border-interactive-accent/50 relative overflow-hidden rounded-[40px] shadow-lg shadow-black/5 border border-white"
+                className="bg-background-elevated p-8 space-y-8 group hover:border-interactive-accent/50 relative overflow-hidden rounded-[40px] shadow-lg shadow-black/5 border border-white/50 dark:border-white/5"
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-interactive-accent/20 rounded-full -mr-16 -mt-16 opacity-30 transition-transform group-hover:scale-110" />
                 

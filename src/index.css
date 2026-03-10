@@ -68,13 +68,14 @@
     --color-interactive-accent: #0F3D0C; /* Dark green backgrounds */
     --color-interactive-control: #FFFFFF;
 
-    --color-background-screen: #0A0A0A;
-    --color-background-elevated: #1A1A1A;
-    --color-background-neutral: #2C2C2C;
-    --color-background-overlay: #2C2C2C;
+    /* Glassmorphism for Dark Mode */
+    --color-background-screen: #000000;
+    --color-background-elevated: rgba(255, 255, 255, 0.03);
+    --color-background-neutral: rgba(255, 255, 255, 0.08);
+    --color-background-overlay: rgba(0, 0, 0, 0.8);
 
-    --color-border-neutral: #333333;
-    --color-border-overlay: #333333;
+    --color-border-neutral: rgba(255, 255, 255, 0.08);
+    --color-border-overlay: rgba(255, 255, 255, 0.1);
 
     --color-base-contrast: #000000;
   }
@@ -84,6 +85,13 @@
     overflow-x: hidden; /* Prevent horizontal scroll */
     width: 100%;
     position: relative;
+  }
+  
+  /* Apply glass effect to elevated elements in dark mode */
+  :root:has(.dark) .bg-background-elevated,
+  :root.dark .bg-background-elevated {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
 }
 

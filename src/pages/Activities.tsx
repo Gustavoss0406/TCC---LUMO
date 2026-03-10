@@ -128,7 +128,7 @@ const Activities = () => {
       </motion.div>
 
       {!log ? (
-        <motion.div variants={itemVariants} className="bg-background-elevated p-12 text-center space-y-6 rounded-[40px] shadow-xl shadow-black/5 border border-white">
+        <motion.div variants={itemVariants} className="bg-background-elevated p-12 text-center space-y-6 rounded-[40px] shadow-xl shadow-black/5 border border-white/50 dark:border-white/5">
           <div className="w-24 h-24 bg-background-neutral rounded-full flex items-center justify-center mx-auto text-content-tertiary border border-border-neutral">
             <Monitor size={40} />
           </div>
@@ -140,7 +140,7 @@ const Activities = () => {
           </div>
         </motion.div>
       ) : sortedApps.length === 0 ? (
-        <motion.div variants={itemVariants} className="bg-background-elevated p-12 text-center space-y-4 rounded-[40px] shadow-xl shadow-black/5 border border-white">
+        <motion.div variants={itemVariants} className="bg-background-elevated p-12 text-center space-y-4 rounded-[40px] shadow-xl shadow-black/5 border border-white/50 dark:border-white/5">
           <div className="w-24 h-24 bg-background-neutral rounded-full flex items-center justify-center mx-auto text-content-tertiary">
             <Search size={40} />
           </div>
@@ -154,7 +154,7 @@ const Activities = () => {
         </motion.div>
       ) : (
         <motion.div variants={itemVariants} className="space-y-4">
-          <div className="bg-background-elevated overflow-hidden rounded-[40px] shadow-xl shadow-black/5 border border-white">
+          <div className="bg-background-elevated overflow-hidden rounded-[40px] shadow-xl shadow-black/5 border border-white/50 dark:border-white/5">
             <AnimatePresence mode="popLayout">
               {sortedApps.map(([app, seconds], index) => {
                 const percentage = totalSeconds > 0 ? (seconds / totalSeconds) * 100 : 0;

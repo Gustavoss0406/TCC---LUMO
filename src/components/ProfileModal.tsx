@@ -11,7 +11,7 @@ interface ProfileModalProps {
 }
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [fullName, setFullName] = useState(user?.user_metadata?.full_name || '');
   const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || null);
   const [loading, setLoading] = useState(false);
@@ -71,6 +71,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSuccess 
         })
         .eq('id', user.id);
 
+      await refreshUser();
       onSuccess();
       onClose();
     } catch (error) {
