@@ -1,0 +1,324 @@
+/* Reset e Base */
+:root {
+  --bg-deep: #000000;
+  --bg-card: rgba(20, 20, 20, 0.6);
+  --accent: #9CFF8A;
+  --accent-glow: rgba(156, 255, 138, 0.15);
+  --text-main: #FFFFFF;
+  --text-muted: #888888;
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --font-main: 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body, html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-deep);
+  color: var(--text-main);
+  font-family: var(--font-main);
+}
+
+/* Container Principal que escala */
+.app-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(10px, 4vmin, 40px);
+  
+  /* Centraliza conteúdo se a tela for muito grande */
+  max-width: 100%;
+  max-height: 100%;
+  margin: auto;
+}
+
+/* Background Glow (Responsivo) */
+.background-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80vmin;
+  height: 80vmin;
+  background: radial-gradient(circle, rgba(15, 61, 12, 0.2) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Header Responsivo */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  height: clamp(30px, 8vmin, 60px);
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: clamp(4px, 1vmin, 12px);
+}
+
+#logo {
+  height: clamp(16px, 4vmin, 32px);
+  width: auto;
+  object-fit: contain;
+}
+
+.app-name {
+  font-weight: 700;
+  font-size: clamp(10px, 2.5vmin, 18px);
+  letter-spacing: -0.02em;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(156, 255, 138, 0.05);
+  padding: clamp(2px, 0.8vmin, 6px) clamp(6px, 1.5vmin, 12px);
+  border-radius: 999px;
+  font-size: clamp(8px, 2vmin, 12px);
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: clamp(4px, 1vmin, 8px);
+  height: clamp(4px, 1vmin, 8px);
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent);
+}
+
+/* Área Principal (Flexível) */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 3vmin, 40px);
+  min-height: 0; /* Permite encolher em telas achatadas */
+  padding: 10px 0;
+}
+
+/* Wrapper do Personagem (Responsivo com vmin) */
+.character-wrapper {
+  position: relative;
+  /* Tamanho baseia-se na menor dimensão da tela */
+  width: clamp(60px, 35vmin, 400px); 
+  height: clamp(60px, 35vmin, 400px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glow-effect {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%);
+  filter: blur(clamp(10px, 4vmin, 40px));
+  z-index: -1;
+}
+
+#character {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* Animação suave de escala */
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Score Responsivo */
+.score-display {
+  text-align: center;
+  z-index: 1;
+}
+
+.score-label {
+  font-size: clamp(8px, 1.5vmin, 14px);
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.15em;
+  display: block;
+  margin-bottom: clamp(2px, 0.5vmin, 8px);
+  opacity: 0.8;
+}
+
+#score {
+  /* Tamanho de fonte agressivamente responsivo */
+  font-size: clamp(32px, 12vmin, 120px); 
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  color: var(--text-main);
+  /* Fallback color */
+}
+
+/* Rodapé / Controles */
+.controls-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 2vmin, 20px);
+  flex-shrink: 0;
+  padding-top: clamp(10px, 2vmin, 20px);
+  border-top: 1px solid var(--glass-border);
+}
+
+.activity-text {
+  font-size: clamp(10px, 2vmin, 16px);
+  color: var(--text-muted);
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80vw;
+}
+
+.buttons-group {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 3vmin, 32px);
+}
+
+.control-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+/* Botões Secundários */
+.control-btn.secondary {
+  width: clamp(32px, 8vmin, 64px);
+  height: clamp(32px, 8vmin, 64px);
+  border-radius: 50%;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.control-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  transform: scale(1.1);
+}
+
+.control-btn.secondary svg {
+  width: 50%;
+  height: 50%;
+}
+
+/* Botão Primário (Play/Pause) */
+.control-btn.primary {
+  width: clamp(48px, 12vmin, 96px);
+  height: clamp(48px, 12vmin, 96px);
+  border-radius: 50%;
+  background: var(--text-main);
+  color: #000;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+}
+
+.control-btn.primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 30px rgba(255, 255, 255, 0.25);
+}
+
+.control-btn.primary:active {
+  transform: scale(0.95);
+}
+
+.control-btn.primary svg {
+  width: 40%;
+  height: 40%;
+  fill: currentColor;
+}
+
+/* MEDIA QUERIES PARA LAYOUTS EXTREMOS */
+
+/* Paisagem muito larga (Monitor Ultrawide ou janela esticada) */
+@media (min-aspect-ratio: 16/9) and (min-height: 400px) {
+  .app-container {
+    flex-direction: row;
+    align-items: center;
+    padding: 4vmin 6vmin;
+  }
+
+  .app-header {
+    position: absolute;
+    top: 20px;
+    left: 40px;
+    width: auto;
+  }
+
+  .main-content {
+    flex-direction: row;
+    gap: 8vmin;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .controls-area {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-top: none;
+    padding-top: 0;
+  }
+}
+
+/* Tela muito pequena (Watch/Widget minúsculo < 150px) */
+@media (max-width: 150px), (max-height: 150px) {
+  .app-header, .activity-text, .score-label, .control-btn.secondary {
+    display: none;
+  }
+  
+  .app-container {
+    padding: 0;
+    justify-content: center;
+  }
+
+  .main-content {
+    gap: 4px;
+  }
+
+  #score {
+    font-size: 24px; /* Fixo para legibilidade mínima */
+  }
+
+  .character-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .controls-area {
+    margin-top: 4px;
+    border: none;
+    padding: 0;
+  }
+  
+  .control-btn.primary {
+    width: 32px;
+    height: 32px;
+  }
+}

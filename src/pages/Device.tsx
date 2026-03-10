@@ -85,6 +85,7 @@ const DevicePage = () => {
         }
 
         // Claim device (update owner)
+        console.log('Attempting to update device:', existingDevice.id);
         const { data: updatedDevice, error: updateError } = await supabase
           .from('devices')
           .update({ 
@@ -95,10 +96,30 @@ const DevicePage = () => {
           .select()
           .single();
         
+        console.log('Update result:', { updatedDevice, updateError });
+        
         if (updateError) {
-            // Fallback: If update fails (RLS), try to delete and recreate if we can
-            // But usually this means we can't claim it.
-            throw new Error('Não foi possível vincular o dispositivo existente. Tente deletá-lo manualmente ou use outro código.');
+          console.error('Update failed, trying to delete and recreate');
+          // Fallback: Delete and recreate if we can
+          await supabase.from('devices').delete().eq('id', existingDevice.id);
+          
+          const { data: newDevice, error: insertError } = await supabase
+            .from('devices')
+            .insert([
+              {
+                id: existingDevice.id, // Try to reuse the ID
+                user_id: user.id,
+                device_code: deviceCode,
+                name: deviceName || 'My FocusBuddy'
+              }
+            ])
+            .select();
+
+          if (insertError) {
+            console.error('Insert failed:', insertError);
+            throw new Error('Não foi possível vincular o dispositivo. Erro: ' + insertError.message);
+          }
+          newDevice = newDevice[0];
         }
         newDevice = updatedDevice;
 
@@ -118,18 +139,7 @@ const DevicePage = () => {
         if (error) throw error;
         newDevice = data[0];
 
-        // Initialize state
-        await supabase.from('device_state').insert({
-          device_id: newDevice.id,
-          state: 'active',
-          productivity: 0,
-          current_activity: 'Offline',
-          app_usage: {},
-          last_sync: new Date().toISOString(),
-          productive_time: 0,
-          neutral_time: 0,
-          distracting_time: 0
-        });
+        // Note: device_state will be created by the Python script
       }
 
       setDevices([...devices, newDevice]);
