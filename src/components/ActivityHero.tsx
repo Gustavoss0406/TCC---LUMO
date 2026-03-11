@@ -27,6 +27,7 @@ const ActivityHero: React.FC<ActivityHeroProps> = ({
       value: topFocusTime,
       color: "bg-interactive-accent",
       textColor: "text-interactive-primary",
+      iconBg: "bg-interactive-primary/20",
       icon: Zap,
       rotate: 2
     },
@@ -36,7 +37,8 @@ const ActivityHero: React.FC<ActivityHeroProps> = ({
       subtitle: streak > 0 ? "Keep it up!" : "Start today!",
       value: dailyGoal,
       color: "bg-bright-blue",
-      textColor: "text-content-primary",
+      textColor: "text-blue-900",
+      iconBg: "bg-blue-900/20",
       icon: Target,
       rotate: -2
     },
@@ -46,7 +48,8 @@ const ActivityHero: React.FC<ActivityHeroProps> = ({
       subtitle: "Keep it up",
       value: `${streak} Days`,
       color: "bg-bright-pink",
-      textColor: "text-white",
+      textColor: "text-pink-900",
+      iconBg: "bg-pink-900/20",
       icon: Trophy,
       rotate: 1
     },
@@ -56,7 +59,8 @@ const ActivityHero: React.FC<ActivityHeroProps> = ({
       subtitle: "Weekly avg",
       value: productivity,
       color: "bg-bright-yellow",
-      textColor: "text-content-primary",
+      textColor: "text-yellow-900",
+      iconBg: "bg-yellow-900/20",
       icon: TrendingUp,
       rotate: -1
     }
@@ -81,10 +85,10 @@ const ActivityHero: React.FC<ActivityHeroProps> = ({
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/20 rounded-full -ml-12 -mb-12 transition-transform duration-700 group-hover:scale-150" />
 
             <div className="relative z-10">
-              <div className={`w-14 h-14 rounded-2xl bg-white/30 backdrop-blur-sm flex items-center justify-center ${card.textColor} mb-4 shadow-sm`}>
+              <div className={`w-14 h-14 rounded-2xl ${card.iconBg} backdrop-blur-sm flex items-center justify-center ${card.textColor} mb-4 shadow-sm`}>
                 <card.icon size={28} fill="currentColor" className="opacity-80" />
               </div>
-              <h3 className={`text-lg font-black uppercase tracking-widest opacity-60 ${card.textColor}`}>{card.title}</h3>
+              <h3 className={`text-lg font-black uppercase tracking-widest opacity-70 ${card.textColor}`}>{card.title}</h3>
               <p className={`text-2xl font-black tracking-tight ${card.textColor}`}>{card.subtitle}</p>
             </div>
 
