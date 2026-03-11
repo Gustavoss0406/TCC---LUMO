@@ -1,48 +1,56 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { ProductivityLog } from '../types/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import AppLogo from '../components/AppLogo';
 import ActivityHero from '../components/ActivityHero';
-import { Monitor, Search, Filter, ArrowUpRight, ArrowDownRight, Clock, Layout, RefreshCw, ChevronRight } from 'lucide-react';
+import { Monitor, Search, RefreshCw, ChevronRight } from 'lucide-react';
 
 const Activities = () => {
   const { user } = useAuth();
   const [streak, setStreak] = useState(0);
   const [dailyGoal, setDailyGoal] = useState(14400);
 
-  // UI state
   const [loading, setLoading] = useState(true);
   const [fetching, setFetching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [appIcons, setAppIcons] = useState<Record<string, string>>({});
-  const [log, setLog] = useState<ProductivityLog | null>(null);
+
+  // Dados agregados do dia
+  const [productiveTime, setProductiveTime] = useState(0);
+  const [neutralTime, setNeutralTime] = useState(0);
+  const [distractingTime, setDistractingTime] = useState(0);
+  const [productivityScore, setProductivityScore] = useState(0);
+  const [mergedAppUsage, setMergedAppUsage] = useState<Record<string, number>>({});
+  const [hasData, setHasData] = useState(false);
 
   const fetchData = async (showSync = false) => {
     if (!user) return;
     if (showSync) setFetching(true);
-    
+
     try {
-      // Fetch icons map
+      // 1. Buscar ícones
       const { data: icons } = await supabase.from('app_icons').select('name, icon_url');
       if (icons) {
-        const iconMap = icons.reduce((acc, curr) => ({ ...acc, [curr.name]: curr.icon_url }), {});
+        const iconMap = icons.reduce((acc: Record<string, string>, curr) => {
+          acc[curr.name] = curr.icon_url;
+          return acc;
+        }, {});
         setAppIcons(iconMap);
       }
 
-      // Fetch profile for daily goal
+      // 2. Buscar perfil (meta diária)
       const { data: profile } = await supabase
         .from('profiles')
         .select('daily_goal_seconds')
         .eq('id', user.id)
         .single();
-      
+
       if (profile?.daily_goal_seconds) {
         setDailyGoal(profile.daily_goal_seconds);
       }
 
-      // Fetch streak
+      // 3. Buscar streak
       const { data: goals } = await supabase
         .from('daily_goals')
         .select('date, completed')
@@ -59,32 +67,100 @@ const Activities = () => {
         setStreak(currentStreak);
       }
 
+      // 4. Buscar dispositivos do user
       const { data: devices } = await supabase
         .from('devices')
         .select('id, device_code')
-        .eq('user_id', user.id)
-        .limit(1);
+        .eq('user_id', user.id);
 
-      if (devices && devices.length > 0) {
-        const deviceId = devices[0].id;
-        const deviceCode = devices[0].device_code;
-        const today = new Date().toISOString().split('T')[0];
-        
-        const { data: logs, error: logsError } = await supabase
-          .from('productivity_logs')
-          .select('*')
-          .eq('device_code', deviceCode)
-          .eq('date', today)
-          .limit(1);
+      if (!devices || devices.length === 0) {
+        setHasData(false);
+        return;
+      }
 
-        if (logsError) {
-          console.error('Error fetching logs:', logsError);
-        }
+      const deviceIds = devices.map(d => d.id);
+      const deviceCodes = devices.map(d => d.device_code);
+      const today = new Date().toISOString().split('T')[0];
 
-        if (logs && logs.length > 0) {
-          setLog(logs[0]);
+      // 5. Buscar device_state (dados em TEMPO REAL)
+      const { data: deviceState } = await supabase
+        .from('device_state')
+        .select('*')
+        .in('device_id', deviceIds)
+        .order('last_sync', { ascending: false })
+        .limit(1)
+        .single();
+
+      // 6. Buscar TODOS os productivity_logs de hoje (histórico por hora)
+      const { data: logs } = await supabase
+        .from('productivity_logs')
+        .select('*')
+        .in('device_code', deviceCodes)
+        .eq('date', today);
+
+      // 7. AGREGAR tudo: logs históricos + device_state atual
+      let totalProd = 0;
+      let totalNeut = 0;
+      let totalDist = 0;
+      let allAppUsage: Record<string, number> = {};
+
+      // Agregar logs históricos (horas anteriores)
+      if (logs && logs.length > 0) {
+        for (const log of logs) {
+          totalProd += log.productive_time || 0;
+          totalNeut += log.neutral_time || 0;
+          totalDist += log.distracting_time || 0;
+
+          const usage = (log.app_usage as Record<string, number>) || {};
+          for (const [app, seconds] of Object.entries(usage)) {
+            allAppUsage[app] = (allAppUsage[app] || 0) + (seconds as number);
+          }
         }
       }
+
+      // Usar device_state como fonte principal (ele tem os totais diários)
+      if (deviceState) {
+        // O tracker envia daily totals no device_state
+        // Se device_state tem dados de hoje, usar esses como totais
+        const stateTime = deviceState.last_sync ? new Date(deviceState.last_sync) : null;
+        const isToday = stateTime && stateTime.toISOString().split('T')[0] === today;
+
+        if (isToday) {
+          // device_state já tem os totais do dia (daily_productive etc)
+          // Usar o maior entre device_state e soma dos logs
+          totalProd = Math.max(totalProd, deviceState.productive_time || 0);
+          totalNeut = Math.max(totalNeut, deviceState.neutral_time || 0);
+          totalDist = Math.max(totalDist, deviceState.distracting_time || 0);
+
+          // Mesclar app_usage do device_state (hora atual)
+          const currentUsage = (deviceState.app_usage as Record<string, number>) || {};
+          for (const [app, seconds] of Object.entries(currentUsage)) {
+            // Verificar se já não está contabilizado nos logs
+            if (!allAppUsage[app]) {
+              allAppUsage[app] = seconds as number;
+            } else {
+              // Usar o maior valor para evitar duplicação
+              allAppUsage[app] = Math.max(allAppUsage[app], seconds as number);
+            }
+          }
+        }
+
+        setProductivityScore(deviceState.productivity || 0);
+      }
+
+      // Se não tem device_state de hoje, calcular score dos logs
+      if (!deviceState || !deviceState.last_sync || 
+          new Date(deviceState.last_sync).toISOString().split('T')[0] !== today) {
+        const activeTime = totalProd + totalDist;
+        setProductivityScore(activeTime > 0 ? Math.round(totalProd / activeTime * 100) : 0);
+      }
+
+      setProductiveTime(totalProd);
+      setNeutralTime(totalNeut);
+      setDistractingTime(totalDist);
+      setMergedAppUsage(allAppUsage);
+      setHasData(totalProd > 0 || totalNeut > 0 || totalDist > 0 || Object.keys(allAppUsage).length > 0);
+
     } catch (err) {
       console.error('Error fetching activities:', err);
     } finally {
@@ -97,6 +173,13 @@ const Activities = () => {
 
   useEffect(() => {
     fetchData();
+    // Auto-refresh a cada 30 segundos
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchData();
+      }
+    }, 30000);
+    return () => clearInterval(interval);
   }, [user]);
 
   if (loading) {
@@ -113,30 +196,32 @@ const Activities = () => {
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
     if (h > 0) return `${h}h ${m}m`;
-    return `${m}m`;
+    if (m > 0) return `${m}m`;
+    return `${s}s`;
   };
 
-  const appUsage = (log?.app_usage as Record<string, number>) || {};
-  const sortedApps = Object.entries(appUsage)
+  // Apps ordenados por uso
+  const sortedApps = Object.entries(mergedAppUsage)
     .filter(([app]) => app.toLowerCase().includes(searchQuery.toLowerCase()))
-    .sort(([, a], [, b]) => (b as number) - (a as number));
+    .sort(([, a], [, b]) => b - a);
 
-  const totalSeconds = Object.values(appUsage).reduce((a, b) => (a as number) + (b as number), 0);
+  const totalSeconds = Object.values(mergedAppUsage).reduce((a, b) => a + b, 0);
 
-  const topApp = Object.entries(appUsage).sort((a, b) => b[1] - a[1])[0];
+  // Hero data
+  const topApp = sortedApps.length > 0 ? sortedApps[0] : null;
   const topFocus = topApp ? topApp[0] : "N/A";
-  const topFocusTime = topApp ? formatTime(topApp[1]) : "0h 0m";
-  const dailyProgress = dailyGoal > 0 ? Math.round((log?.productive_time || 0) / dailyGoal * 100) : 0;
-  const dailyGoalStr = `${dailyProgress}%`;
-  const productivity = "+12%"; // TODO: calculate from logs
+  const topFocusTime = topApp ? formatTime(topApp[1]) : "0m";
+  const dailyProgress = dailyGoal > 0 ? Math.round(productiveTime / dailyGoal * 100) : 0;
+  const dailyGoalStr = `${Math.min(dailyProgress, 100)}%`;
+
+  // Calcular variação de produtividade (comparar com ontem)
+  const productivity = productivityScore > 0 ? `${productivityScore}%` : "0%";
 
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.05
-      }
+      transition: { staggerChildren: 0.05 }
     }
   };
 
@@ -146,26 +231,27 @@ const Activities = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="show"
       className="space-y-8 pb-12 max-w-lg mx-auto"
     >
-      <ActivityHero 
-        topFocus={topFocus} 
-        topFocusTime={topFocusTime} 
-        dailyGoal={dailyGoalStr} 
-        streak={streak} 
-        productivity={productivity} 
+      <ActivityHero
+        topFocus={topFocus}
+        topFocusTime={topFocusTime}
+        dailyGoal={dailyGoalStr}
+        streak={streak}
+        productivity={productivity}
       />
+
       <motion.div variants={itemVariants} className="space-y-6">
         <div className="flex items-center justify-between px-1">
           <div>
             <h2 className="text-4xl font-black text-content-primary tracking-tighter">Registro de Atividades</h2>
             <p className="text-content-secondary font-medium mt-1">Detalhamento de uso entre dispositivos</p>
           </div>
-          <button 
+          <button
             onClick={() => fetchData(true)}
             disabled={fetching}
             className={`relative overflow-hidden shimmer-effect p-4 rounded-2xl bg-background-elevated border border-border-neutral text-content-tertiary hover:text-interactive-primary hover:bg-interactive-accent/20 transition-all shadow-sm ${fetching ? 'animate-spin' : ''}`}
@@ -176,9 +262,9 @@ const Activities = () => {
 
         <div className="relative group">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-content-tertiary group-focus-within:text-content-primary transition-colors" size={22} />
-          <input 
-            type="text" 
-            placeholder="Buscar aplicações..." 
+          <input
+            type="text"
+            placeholder="Buscar aplicações..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-14 px-6 py-5 bg-background-neutral/50 border-2 border-transparent rounded-[24px] focus:border-interactive-accent focus:bg-background-elevated transition-all outline-none font-bold text-lg placeholder:font-medium"
@@ -186,7 +272,7 @@ const Activities = () => {
         </div>
       </motion.div>
 
-      {!log ? (
+      {!hasData ? (
         <motion.div variants={itemVariants} className="bg-background-elevated p-12 text-center space-y-6 rounded-[40px] shadow-xl shadow-black/5 border border-white/50 dark:border-white/5">
           <div className="w-24 h-24 bg-background-neutral rounded-full flex items-center justify-center mx-auto text-content-tertiary border border-border-neutral">
             <Monitor size={40} />
@@ -204,7 +290,7 @@ const Activities = () => {
             <Search size={40} />
           </div>
           <p className="text-content-secondary font-bold text-lg">Nenhuma aplicação corresponde à sua busca.</p>
-          <button 
+          <button
             onClick={() => setSearchQuery('')}
             className="text-interactive-primary font-black text-sm hover:underline px-6 py-3 bg-interactive-accent/20 rounded-full uppercase tracking-widest"
           >
@@ -213,13 +299,30 @@ const Activities = () => {
         </motion.div>
       ) : (
         <motion.div variants={itemVariants} className="space-y-4">
+          {/* Resumo rápido */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-background-elevated rounded-2xl p-4 text-center border border-white/50 dark:border-white/5">
+              <p className="text-2xl font-black text-sentiment-positive">{formatTime(productiveTime)}</p>
+              <p className="text-[10px] font-black text-content-tertiary uppercase tracking-widest mt-1">Produtivo</p>
+            </div>
+            <div className="bg-background-elevated rounded-2xl p-4 text-center border border-white/50 dark:border-white/5">
+              <p className="text-2xl font-black text-sentiment-warning">{formatTime(neutralTime)}</p>
+              <p className="text-[10px] font-black text-content-tertiary uppercase tracking-widest mt-1">Neutro</p>
+            </div>
+            <div className="bg-background-elevated rounded-2xl p-4 text-center border border-white/50 dark:border-white/5">
+              <p className="text-2xl font-black text-sentiment-negative">{formatTime(distractingTime)}</p>
+              <p className="text-[10px] font-black text-content-tertiary uppercase tracking-widest mt-1">Distração</p>
+            </div>
+          </div>
+
+          {/* Lista de apps */}
           <div className="bg-background-elevated overflow-hidden rounded-[40px] shadow-xl shadow-black/5 border border-white/50 dark:border-white/5">
             <AnimatePresence mode="popLayout">
               {sortedApps.map(([app, seconds], index) => {
                 const percentage = totalSeconds > 0 ? (seconds / totalSeconds) * 100 : 0;
-                
+
                 return (
-                  <motion.div 
+                  <motion.div
                     layout
                     key={app}
                     initial={{ opacity: 0, y: 10 }}
@@ -231,8 +334,8 @@ const Activities = () => {
                     }`}
                   >
                     <div className="flex items-center gap-5 min-w-0">
-                      <AppLogo 
-                        appName={app} 
+                      <AppLogo
+                        appName={app}
                         iconUrl={appIcons[app]}
                         className="w-16 h-16 rounded-2xl bg-background-screen flex-shrink-0 flex items-center justify-center text-content-tertiary border border-border-neutral group-hover:border-interactive-accent/50 group-hover:text-interactive-primary transition-all shadow-sm p-3"
                       />
@@ -240,7 +343,7 @@ const Activities = () => {
                         <h4 className="font-black text-content-primary text-xl truncate tracking-tight">{app}</h4>
                         <div className="flex items-center gap-3">
                           <div className="w-24 h-2 bg-background-neutral rounded-full overflow-hidden p-0.5">
-                            <motion.div 
+                            <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${percentage}%` }}
                               className="h-full bg-interactive-primary rounded-full shadow-sm"
@@ -267,6 +370,13 @@ const Activities = () => {
                 );
               })}
             </AnimatePresence>
+          </div>
+
+          {/* Total */}
+          <div className="text-center py-4">
+            <p className="text-content-tertiary text-sm font-bold">
+              {sortedApps.length} {sortedApps.length === 1 ? 'aplicação' : 'aplicações'} · {formatTime(totalSeconds)} total
+            </p>
           </div>
         </motion.div>
       )}
