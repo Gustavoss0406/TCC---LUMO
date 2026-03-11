@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import AppLogo from '../components/AppLogo';
 import ActivityHero from '../components/ActivityHero';
-import { Monitor, Search, RefreshCw, ChevronRight } from 'lucide-react';
+import { Monitor, Search, RefreshCw } from 'lucide-react';
 
 const Activities = () => {
   const { user } = useAuth();
@@ -16,7 +16,6 @@ const Activities = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [appIcons, setAppIcons] = useState<Record<string, string>>({});
 
-  // Dados agregados do dia
   const [productiveTime, setProductiveTime] = useState(0);
   const [neutralTime, setNeutralTime] = useState(0);
   const [distractingTime, setDistractingTime] = useState(0);
@@ -29,7 +28,6 @@ const Activities = () => {
     if (showSync) setFetching(true);
 
     try {
-      // 1. Buscar ícones
       const { data: icons } = await supabase.from('app_icons').select('name, icon_url');
       if (icons) {
         const iconMap = icons.reduce((acc: Record<string, string>, curr) => {
@@ -39,7 +37,6 @@ const Activities = () => {
         setAppIcons(iconMap);
       }
 
-      // 2. Buscar perfil (meta diária)
       const { data: profile } = await supabase
         .from('profiles')
         .select('daily_goal_seconds')
@@ -50,7 +47,6 @@ const Activities = () => {
         setDailyGoal(profile.daily_goal_seconds);
       }
 
-      // 3. Buscar streak
       const { data: goals } = await supabase
         .from('daily_goals')
         .select('date, completed')
@@ -67,7 +63,6 @@ const Activities = () => {
         setStreak(currentStreak);
       }
 
-      // 4. Buscar dispositivos do user
       const { data: devices } = await supabase
         .from('devices')
         .select('id, device_code')
@@ -82,7 +77,6 @@ const Activities = () => {
       const deviceCodes = devices.map(d => d.device_code);
       const today = new Date().toISOString().split('T')[0];
 
-      // 5. Buscar device_state (dados em TEMPO REAL)
       const { data: deviceState } = await supabase
         .from('device_state')
         .select('*')
@@ -91,20 +85,17 @@ const Activities = () => {
         .limit(1)
         .single();
 
-      // 6. Buscar TODOS os productivity_logs de hoje (histórico por hora)
       const { data: logs } = await supabase
         .from('productivity_logs')
         .select('*')
         .in('device_code', deviceCodes)
         .eq('date', today);
 
-      // 7. AGREGAR tudo: logs históricos + device_state atual
       let totalProd = 0;
       let totalNeut = 0;
       let totalDist = 0;
       let allAppUsage: Record<string, number> = {};
 
-      // Agregar logs históricos (horas anteriores)
       if (logs && logs.length > 0) {
         for (const log of logs) {
           totalProd += log.productive_time || 0;
@@ -118,38 +109,27 @@ const Activities = () => {
         }
       }
 
-      // Usar device_state como fonte principal (ele tem os totais diários)
-      if (deviceState) {
-        // O tracker envia daily totals no device_state
-        // Se device_state tem dados de hoje, usar esses como totais
-        const stateTime = deviceState.last_sync ? new Date(deviceState.last_sync) : null;
-        const isToday = stateTime && stateTime.toISOString().split('T')[0] === today;
-
-        if (isToday) {
-          // device_state já tem os totais do dia (daily_productive etc)
-          // Usar o maior entre device_state e soma dos logs
+      if (deviceState && deviceState.last_sync) {
+        const stateDate = new Date(deviceState.last_sync).toISOString().split('T')[0];
+        if (stateDate === today) {
           totalProd = Math.max(totalProd, deviceState.productive_time || 0);
           totalNeut = Math.max(totalNeut, deviceState.neutral_time || 0);
           totalDist = Math.max(totalDist, deviceState.distracting_time || 0);
 
-          // Mesclar app_usage do device_state (hora atual)
           const currentUsage = (deviceState.app_usage as Record<string, number>) || {};
           for (const [app, seconds] of Object.entries(currentUsage)) {
-            // Verificar se já não está contabilizado nos logs
             if (!allAppUsage[app]) {
               allAppUsage[app] = seconds as number;
             } else {
-              // Usar o maior valor para evitar duplicação
               allAppUsage[app] = Math.max(allAppUsage[app], seconds as number);
             }
           }
-        }
 
-        setProductivityScore(deviceState.productivity || 0);
+          setProductivityScore(deviceState.productivity || 0);
+        }
       }
 
-      // Se não tem device_state de hoje, calcular score dos logs
-      if (!deviceState || !deviceState.last_sync || 
+      if (!deviceState || !deviceState.last_sync ||
           new Date(deviceState.last_sync).toISOString().split('T')[0] !== today) {
         const activeTime = totalProd + totalDist;
         setProductivityScore(activeTime > 0 ? Math.round(totalProd / activeTime * 100) : 0);
@@ -173,7 +153,6 @@ const Activities = () => {
 
   useEffect(() => {
     fetchData();
-    // Auto-refresh a cada 30 segundos
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         fetchData();
@@ -200,21 +179,18 @@ const Activities = () => {
     return `${s}s`;
   };
 
-  // Apps ordenados por uso
   const sortedApps = Object.entries(mergedAppUsage)
     .filter(([app]) => app.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort(([, a], [, b]) => b - a);
 
   const totalSeconds = Object.values(mergedAppUsage).reduce((a, b) => a + b, 0);
 
-  // Hero data
   const topApp = sortedApps.length > 0 ? sortedApps[0] : null;
-  const topFocus = topApp ? topApp[0] : "N/A";
+  const topFocusRaw = topApp ? topApp[0] : "N/A";
+  const topFocus = topFocusRaw.length > 15 ? topFocusRaw.substring(0, 15) + '…' : topFocusRaw;
   const topFocusTime = topApp ? formatTime(topApp[1]) : "0m";
   const dailyProgress = dailyGoal > 0 ? Math.round(productiveTime / dailyGoal * 100) : 0;
   const dailyGoalStr = `${Math.min(dailyProgress, 100)}%`;
-
-  // Calcular variação de produtividade (comparar com ontem)
   const productivity = productivityScore > 0 ? `${productivityScore}%` : "0%";
 
   const containerVariants = {
@@ -299,7 +275,6 @@ const Activities = () => {
         </motion.div>
       ) : (
         <motion.div variants={itemVariants} className="space-y-4">
-          {/* Resumo rápido */}
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-background-elevated rounded-2xl p-4 text-center border border-white/50 dark:border-white/5">
               <p className="text-2xl font-black text-sentiment-positive">{formatTime(productiveTime)}</p>
@@ -315,7 +290,6 @@ const Activities = () => {
             </div>
           </div>
 
-          {/* Lista de apps */}
           <div className="bg-background-elevated overflow-hidden rounded-[40px] shadow-xl shadow-black/5 border border-white/50 dark:border-white/5">
             <AnimatePresence mode="popLayout">
               {sortedApps.map(([app, seconds], index) => {
@@ -329,18 +303,18 @@ const Activities = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ delay: index * 0.03 }}
-                    className={`p-6 flex items-center justify-between group hover:bg-background-neutral/50 transition-all cursor-pointer ${
+                    className={`p-6 flex items-center justify-between group hover:bg-background-neutral/50 transition-all ${
                       index !== sortedApps.length - 1 ? 'border-b border-border-neutral/50' : ''
                     }`}
                   >
-                    <div className="flex items-center gap-5 min-w-0">
+                    <div className="flex items-center gap-5 min-w-0 flex-1">
                       <AppLogo
                         appName={app}
                         iconUrl={appIcons[app]}
-                        className="w-16 h-16 rounded-2xl bg-background-screen flex-shrink-0 flex items-center justify-center text-content-tertiary border border-border-neutral group-hover:border-interactive-accent/50 group-hover:text-interactive-primary transition-all shadow-sm p-3"
+                        className="w-16 h-16 rounded-2xl bg-background-screen flex-shrink-0 flex items-center justify-center text-content-tertiary border border-border-neutral shadow-sm p-3"
                       />
-                      <div className="space-y-1.5 min-w-0">
-                        <h4 className="font-black text-content-primary text-xl truncate tracking-tight">{app}</h4>
+                      <div className="space-y-1.5 min-w-0 flex-1">
+                        <h4 className="font-black text-content-primary text-xl truncate tracking-tight max-w-[180px]">{app}</h4>
                         <div className="flex items-center gap-3">
                           <div className="w-24 h-2 bg-background-neutral rounded-full overflow-hidden p-0.5">
                             <motion.div
@@ -355,16 +329,11 @@ const Activities = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-6 flex-shrink-0">
-                      <div className="text-right space-y-1">
-                        <p className="font-black text-content-primary text-xl">{formatTime(seconds)}</p>
-                        <p className="text-[10px] text-sentiment-positive font-black uppercase tracking-widest bg-sentiment-positive/10 px-2 py-0.5 rounded-full inline-block">
-                          Ativo
-                        </p>
-                      </div>
-                      <div className="w-12 h-12 rounded-full bg-background-neutral flex items-center justify-center text-content-tertiary group-hover:bg-interactive-accent group-hover:text-content-primary transition-all duration-300">
-                        <ChevronRight size={24} />
-                      </div>
+                    <div className="text-right space-y-1 flex-shrink-0 ml-4">
+                      <p className="font-black text-content-primary text-xl">{formatTime(seconds)}</p>
+                      <p className="text-[10px] text-sentiment-positive font-black uppercase tracking-widest bg-sentiment-positive/10 px-2 py-0.5 rounded-full inline-block">
+                        Ativo
+                      </p>
                     </div>
                   </motion.div>
                 );
@@ -372,7 +341,6 @@ const Activities = () => {
             </AnimatePresence>
           </div>
 
-          {/* Total */}
           <div className="text-center py-4">
             <p className="text-content-tertiary text-sm font-bold">
               {sortedApps.length} {sortedApps.length === 1 ? 'aplicação' : 'aplicações'} · {formatTime(totalSeconds)} total
